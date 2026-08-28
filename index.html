@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#173d5b">
   <meta name="description" content="Psikia Hub: asistente móvil para dictado clínico, informes y terapia grupal.">
-  <link rel="manifest" href="manifest.webmanifest?v=3.3">
+  <link rel="manifest" href="manifest.webmanifest?v=4.2">
   <link rel="icon" href="icon-192.png">
   <title>Psikia Hub</title>
   <style>
+    .addonBar{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 12px}.addonBar button{min-width:0;padding:9px 5px;font-size:12px}@media(max-width:360px){.addonBar{grid-template-columns:1fr}.addonBar button{font-size:13px}}
     :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b}
     *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:12px 14px;box-shadow:0 2px 10px #0002}.head{display:flex;align-items:center;gap:10px;max-width:860px;margin:auto}.brandicon{width:43px;height:43px;border-radius:12px}.brand{font-size:21px;font-weight:850;line-height:1.05}.sub{font-size:11px;opacity:.82;margin-top:3px}
@@ -25,7 +26,7 @@
   </style>
 </head>
 <body>
-<header><div class="head"><img class="brandicon" src="icon-192.png?v=3.3" alt=""><div style="min-width:0;flex:1"><div class="brand">Psikia Hub</div><div class="sub">Notas clínicas · psicoterapia · grupos</div></div><span class="versionBadge">v3.3</span><div id="activeUserBadge" class="userBadge" title="Profesional activo">AB</div></div></header>
+<header><div class="head"><img class="brandicon" src="icon-192.png?v=4.0" alt=""><div style="min-width:0;flex:1"><div class="brand">Psikia Hub</div><div class="sub">Notas clínicas · psicoterapia · grupos</div></div><span class="versionBadge">v4.0</span><div id="activeUserBadge" class="userBadge" title="Profesional activo">AB</div></div></header>
 <main>
   <section id="tab-notes" class="tab active">
     <div class="card" id="captureCard">
@@ -60,6 +61,7 @@
         <label for="scaleType">Instrumento / exploración</label>
         <select id="scaleType">
           <option value="">Seleccionar…</option>
+          <option value="mseMap">Exploración psicopatológica estructurada</option>
           <option value="motor">Exploración motora breve</option>
           <option value="clock">Test del reloj · foto y registro asistido</option>
           <option value="spiral">Espiral / escritura · temblor y micrografía</option>
@@ -75,6 +77,7 @@
       </div></details>
       <details id="diagnosticDetails"><summary>Orientación diagnóstica</summary><div class="detailBody"><div id="diagnosticSuggestion"></div><button id="addDiagnostic" class="addSuggestion">＋ Añadir al documento</button></div></details>
       <details id="therapyDetails"><summary>Intervención psicoterapéutica</summary><div class="detailBody"><div id="therapySuggestion"></div><button id="addTherapy" class="addSuggestion">＋ Añadir al documento</button></div></details>
+      <details id="pharmDetails"><summary>Orientación farmacológica</summary><div class="detailBody"><div id="pharmSuggestion"></div><button id="addPharm" class="addSuggestion">＋ Añadir al documento</button></div></details>
       <details id="traceDetails"><summary>Revisar transcripción origen</summary><div class="detailBody"><div id="traceText" class="traceText"></div></div></details>
       <div class="actions"><button id="email" class="wide">✉️ Enviar texto al correo</button><button id="copy" class="secondary">Copiar</button><button id="saveContext" class="ghost">Guardar evolución</button></div>
       <div id="saveHint" class="small" style="margin-top:8px"></div>
@@ -114,7 +117,7 @@ logicismos => neologismos"></textarea><button id="saveVocabulary" class="seconda
       <div class="settingsLine"><div><b>Contextos locales</b><div class="small">Continuidad de diagnóstico, tratamiento y resumen por código local para el usuario activo.</div></div><button id="clearPatients" class="danger">Borrar</button></div>
       <details><summary>Marco de uso y responsabilidad</summary><div class="detailBody"><div class="legalBox"><b>Proyecto no comercial.</b> Psikia Hub es una herramienta experimental de apoyo a la documentación y organización clínica. El profesional debe revisar y validar cualquier nota, diagnóstico sugerido, tratamiento o intervención antes de incorporarlo a la historia clínica.</div><p>El diseño prioriza minimización de datos, almacenamiento local y uso de códigos no identificativos. Está orientado al marco español de RGPD y LOPDGDD y a las normas de documentación clínica aplicables, incluida la normativa sanitaria de Navarra. Esto no equivale a una certificación jurídica, de seguridad o de producto sanitario. La adecuación final depende también del dispositivo, navegador, correo, políticas del centro y autorizaciones internas.</p><p>La normativa básica de protección de datos es estatal/europea; las comunidades autónomas y los servicios de salud pueden añadir obligaciones sectoriales y organizativas sobre historia clínica, custodia, acceso y seguridad.</p></div></details>
       <div class="settingsLine"><div><b>Actualizar aplicación</b><div class="small">Borra la caché de la PWA y fuerza la carga del motor actual si el móvil muestra una versión antigua.</div></div><button id="forceUpdate" class="secondary">Actualizar</button></div>
-      <div class="small" style="margin-top:10px">Versión 3.3 · motor clínico local con plantillas semánticas y actualización anticaché</div>
+      <div class="small" style="margin-top:10px">Versión 4.2 · motor semántico local · exploración psicopatológica general · aprendizaje de correcciones</div>
     </div>
   </section>
 </main>
@@ -124,7 +127,7 @@ logicismos => neologismos"></textarea><button id="saveVocabulary" class="seconda
 <div id="imageOverlay" class="imageOverlay" aria-hidden="true"><img id="imageOverlayImg" alt="Material visual"><button id="closeImageOverlay" class="secondary">Cerrar imagen</button></div>
 
 <div id="presentation" class="presentation" aria-hidden="true"><div id="slide" class="slide"></div><div class="presentControls"><button id="prevSlide" class="secondary">← Anterior</button><button id="nextSlide">Siguiente →</button><button id="closePresentation" class="ghost">Cerrar</button></div></div>
-<script src="app.js?v=3.3"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=3.3',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{})}</script>
+<script src="app.js?v=4.2"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=4.2',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{})}</script>
 </body>
 </html>

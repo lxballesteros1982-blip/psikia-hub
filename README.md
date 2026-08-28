@@ -1,38 +1,34 @@
-# Psikia Hub v3.3 — motor clínico local y actualización anticaché
+# Psikia Hub v4.1 · motor semántico + biblioteca clínica
 
-Versión acumulativa de Psikia Hub orientada a móvil, sin API comercial obligatoria.
+PWA local-first y no comercial para apoyo a documentación clínica. La salida debe ser revisada y validada por el profesional antes de incorporarse a la historia.
 
-## Qué corrige esta versión
+## Novedades v4.1
 
-- Muestra **v3.3** de forma visible en la cabecera para saber qué motor está ejecutando realmente el móvil.
-- Carga `app.js` y el service worker con versión explícita para evitar mezclar interfaz nueva con JavaScript antiguo.
-- Añade **Ajustes → Actualizar aplicación** para borrar cachés PWA y forzar la descarga del motor vigente.
-- Refuerza el motor de seguimiento/UR con detección por **secciones y alcance**: contexto → evolución → exploración → juicio → plan.
-- Mantiene diagnóstico y tratamiento longitudinales salvo cambio explícito.
-- Evita que “diagnóstico no cambia” convierta toda la transcripción en una sugerencia diagnóstica.
-- Incluye correcciones ASR seguras de expresiones muy características sin autocorregir diagnósticos o fármacos.
-- Mantiene escalas/exploraciones opcionales y las hace más visibles en el flujo del borrador.
+- Plantillas de primera valoración y urgencias afinadas con la estructura de entrevista, historia, MSE, riesgo y organicidad de **Psychiatry at a Glance (6th ed.)** y **Emergencies in Psychiatry** cargados por el usuario.
+- Diferencial progresivo enriquecido con criterios temporales/diferenciales del **DSM-5-TR** cargado por el usuario.
+- En Urgencias se añade explícitamente **Exploración física / organicidad**, además de riesgo, pruebas, intervención y disposición.
+- Nuevo add-on **💊 Orientación farmacológica** en primera valoración/UR inicial/agudos. Es orientativo y no modifica la pauta automáticamente. Se basa en guías NICE actuales y en los manuales ya cargados; se valida siempre con CIMA/ficha técnica, interacciones y comorbilidad.
+- El manual de **Stephen Stahl** todavía no aparece en la biblioteca local de esta sesión; el módulo queda preparado para incorporarlo en cuanto el archivo esté disponible.
 
-## Diseño del motor
+## Principios de la biblioteca
 
-El motor local sigue un enfoque ligero inspirado en los *sectionizers* de NLP clínico: detecta marcadores explícitos, asigna alcance hasta el siguiente bloque y aplica reglas semánticas clínicas dentro de cada sección. Se ha preferido este enfoque sobre ejecutar Python/R en el teléfono para mantener la PWA pequeña, rápida, privada y sin costes recurrentes.
+Los libros no se redistribuyen ni se copian dentro de la app. Se han utilizado para derivar estructuras, reglas semánticas y recordatorios clínicos propios. El contenido clínico no se envía a esos recursos.
 
-Como referencias técnicas se han revisado medSpaCy/Sectionizer, Stanza (Stanford), FreeLing (TALP-UPC), modelos españoles BETO/ALBETO (Universidad de Chile) y Transformers.js. Un modelo semántico local puede añadirse más adelante como fallback, pero no es necesario para el flujo principal de esta versión.
+## Fuentes de arquitectura clínica
 
-## Benchmark de regresión
+- Psychiatry at a Glance, 6th edition (biblioteca del usuario).
+- Emergencies in Psychiatry, Oxford Medical Publications (biblioteca del usuario).
+- DSM-5-TR 2022 (biblioteca del usuario).
+- NICE: depresión, ansiedad/pánico, psicosis/esquizofrenia y trastorno bipolar.
+- AEMPS CIMA / eCIEMaps para validación farmacológica y codificación.
 
-La nota de seguimiento de esquizofrenia usada durante las pruebas debe producir, aproximadamente:
+## Privacidad
 
-- Descripción del caso: esquizofrenia paranoide + UR + paliperidona IM 100 mg mensual.
-- Evolución: adaptación/participación, ajedrez-vínculo con hijo, adherencia, productividad delirante ocasional.
-- Exploración: consciente/orientado, discurso, descarrilamientos, ideas delirantes, sueño/apetito.
-- Juicio: diagnóstico previo sin cambios.
-- Plan: mantener tratamiento + intervención cognitivo-conductual para psicosis.
+Procesamiento esencial local en PWA. Proyecto no comercial/experimental. El diseño no equivale a certificación jurídica, de seguridad ni de producto sanitario.
 
-## Actualización desde GitHub Pages
 
-Subir todos los archivos al raíz del repositorio `psikia-hub`, hacer commit y esperar el check verde de Pages. Después abrir una vez:
-
-`https://lxballesteros1982-blip.github.io/psikia-hub/?v=3.3`
-
-La cabecera debe mostrar **v3.3**. Si no aparece, usar **Ajustes → Actualizar aplicación**.
+## v4.2 – exploración psicopatológica general
+- El motor de exploración ya no está centrado en psicosis: reconoce y reordena dominios de aspecto/actitud, conciencia/orientación, atención, memoria, psicomotricidad, voluntad, afectividad, sensopercepción, pensamiento, lenguaje, sueño, alimentación, sexualidad e insight.
+- Añade un mapa opcional de exploración psicopatológica dentro de Escalas / exploraciones.
+- Se amplía el aprendizaje de vocabulario y correcciones frecuentes de dictado.
+- Stahl Prescriber's Guide – Children and Adolescents 2nd ed. (2024) se usa solo para sugerencias pediátricas cuando la edad/contexto lo identifica; no se extrapola a adultos.

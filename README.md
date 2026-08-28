@@ -1,34 +1,46 @@
-# Psikia Hub v4.1 · motor semántico + biblioteca clínica
+# Psikia Hub v4.1 · motor clínico híbrido local
 
-PWA local-first y no comercial para apoyo a documentación clínica. La salida debe ser revisada y validada por el profesional antes de incorporarse a la historia.
+PWA clínica local-first, no comercial, para apoyo a documentación clínica. El profesional debe revisar y validar siempre la salida antes de incorporarla a la historia clínica.
 
-## Novedades v4.1
+## Cambio principal
 
-- Plantillas de primera valoración y urgencias afinadas con la estructura de entrevista, historia, MSE, riesgo y organicidad de **Psychiatry at a Glance (6th ed.)** y **Emergencies in Psychiatry** cargados por el usuario.
-- Diferencial progresivo enriquecido con criterios temporales/diferenciales del **DSM-5-TR** cargado por el usuario.
-- En Urgencias se añade explícitamente **Exploración física / organicidad**, además de riesgo, pruebas, intervención y disposición.
-- Nuevo add-on **💊 Orientación farmacológica** en primera valoración/UR inicial/agudos. Es orientativo y no modifica la pauta automáticamente. Se basa en guías NICE actuales y en los manuales ya cargados; se valida siempre con CIMA/ficha técnica, interacciones y comorbilidad.
-- El manual de **Stephen Stahl** todavía no aparece en la biblioteca local de esta sesión; el módulo queda preparado para incorporarlo en cuanto el archivo esté disponible.
+Esta versión sustituye el troceado literal de frases por un motor local en varias capas:
 
-## Principios de la biblioteca
+1. corrección conservadora del dictado y vocabulario aprendido por usuario;
+2. detección de marcadores/secciones clínicas;
+3. extracción de hechos (diagnóstico, medicación, evolución funcional, hallazgos psicopatológicos, intervención y seguimiento);
+4. contexto/negación simple;
+5. reescritura en prosa clínica por sección;
+6. continuidad longitudinal: diagnóstico y tratamiento persisten salvo cambio explícito;
+7. diferencial adaptativo: más hipótesis con poca información y menos al aumentar los datos clínicos.
 
-Los libros no se redistribuyen ni se copian dentro de la app. Se han utilizado para derivar estructuras, reglas semánticas y recordatorios clínicos propios. El contenido clínico no se envía a esos recursos.
+Incluye además el add-on visible de Escalas/Exploraciones, consulta médica general, grupos TMG, cámara, multiusuario local y correo en texto.
 
-## Fuentes de arquitectura clínica
+## Referencias técnicas abiertas utilizadas como arquitectura
 
-- Psychiatry at a Glance, 6th edition (biblioteca del usuario).
-- Emergencies in Psychiatry, Oxford Medical Publications (biblioteca del usuario).
-- DSM-5-TR 2022 (biblioteca del usuario).
-- NICE: depresión, ansiedad/pánico, psicosis/esquizofrenia y trastorno bipolar.
-- AEMPS CIMA / eCIEMaps para validación farmacológica y codificación.
+- **medSpaCy**: Sectionizer, segmentación clínica y ConText (negación/contexto), MIT.
+- **Apache cTAKES**: arquitectura modular para extraer síntomas, diagnósticos, medicamentos y temporalidad, Apache.
+- **CogStack / MedCAT**: normalización de conceptos clínicos y personalización del vocabulario, Apache/MIT según componente.
+- **PlanTL-GOB-ES / Barcelona Supercomputing Center**: modelos biomédico-clínicos oficiales en español, Apache 2.0. No se descarga el modelo pesado en el móvil en esta versión; se usa como referencia para una posible capa local futura.
+- **SymSpell**: corrección/fuzzy matching eficiente; la app utiliza una implementación JS conservadora propia inspirada en este enfoque.
+- **AEMPS CIMA**: fuente oficial y abierta para nombres de medicamentos, principios activos, dosis, formas y vías. Esta versión mantiene un diccionario local conservador y aprendizaje de correcciones; no envía el dictado a CIMA.
+- **CIE-10-ES / eCIEMaps 2026**: referencia oficial para códigos diagnósticos.
+
+## Prueba de regresión
+
+El dictado patrón de UR con esquizofrenia/pariperidona se comprueba antes de publicar esta versión. Debe producir de forma separada:
+- descripción del caso;
+- evolución clínica/funcional;
+- exploración psicopatológica;
+- juicio clínico;
+- plan y seguimiento.
 
 ## Privacidad
 
-Procesamiento esencial local en PWA. Proyecto no comercial/experimental. El diseño no equivale a certificación jurídica, de seguridad ni de producto sanitario.
+Los recursos externos anteriores no reciben contenido clínico en esta versión. El procesamiento esencial se realiza localmente en el navegador/PWA. El diseño no equivale a certificación jurídica, de seguridad o de producto sanitario.
 
 
-## v4.2 – exploración psicopatológica general
-- El motor de exploración ya no está centrado en psicosis: reconoce y reordena dominios de aspecto/actitud, conciencia/orientación, atención, memoria, psicomotricidad, voluntad, afectividad, sensopercepción, pensamiento, lenguaje, sueño, alimentación, sexualidad e insight.
-- Añade un mapa opcional de exploración psicopatológica dentro de Escalas / exploraciones.
-- Se amplía el aprendizaje de vocabulario y correcciones frecuentes de dictado.
-- Stahl Prescriber's Guide – Children and Adolescents 2nd ed. (2024) se usa solo para sugerencias pediátricas cuando la edad/contexto lo identifica; no se extrapola a adultos.
+## v4.1 · Biblioteca clínica local
+- Mejora de exploración psicopatológica y riesgo basada en los manuales aportados por el usuario.
+- Revisión farmacológica opcional conservadora (alerta, nunca autocorrección silenciosa).
+- Urgencias con extracción explícita de riesgo, exploración física e investigaciones cuando se dictan.

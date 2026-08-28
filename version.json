@@ -1,1 +1,1 @@
-{"version":"4.2","engine":"hybrid-sectionizer-general-mse-stahl-peds","date":"2026-08-28","features":["sectionizer","general-mental-status-exam","context-negation","semantic-rewrite","learned-vocabulary","adaptive-differential","scales-addon","stahl-pediatric-pharmacology","pharmacotherapy-addon"]}
+{"version":"4.1","engine":"hybrid-sectionizer-rewriter","date":"2026-08-28","features":["sectionizer","context-negation","semantic-rewrite","learned-vocabulary","adaptive-differential","scales-addon","clinical-book-pack","emergency-risk","medication-checks"]}

@@ -2,7 +2,7 @@
   "name": "Psikia Hub",
   "short_name": "Psikia Hub",
   "description": "Asistente móvil multiusuario para dictado clínico, continuidad asistencial, informes y terapia grupal.",
-  "start_url": "./index.html?v=4.2",
+  "start_url": "./index.html?v=4.1",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f7f9",

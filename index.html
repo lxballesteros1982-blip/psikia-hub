@@ -1,80 +1,526 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#173d5b">
-  <meta name="description" content="Psikia Hub: asistente móvil local para notas clínicas, orientación diagnóstica, pruebas complementarias, psicofarmacología y terapia grupal.">
-  <link rel="manifest" href="manifest.webmanifest?v=4.3">
-  <link rel="icon" href="icon-192.png">
-  <title>Psikia Hub</title>
-  <style>
-    :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b}
-    *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:12px 14px;box-shadow:0 2px 10px #0002}.head{display:flex;align-items:center;gap:10px;max-width:860px;margin:auto}.brandicon{width:43px;height:43px;border-radius:12px}.brand{font-size:21px;font-weight:850;line-height:1.05}.sub{font-size:11px;opacity:.82;margin-top:3px}.versionBadge{font-size:10px;font-weight:800;background:#ffffff1f;border:1px solid #ffffff33;border-radius:999px;padding:4px 7px;white-space:nowrap}.userBadge{min-width:38px;height:38px;border-radius:12px;background:#ffffff22;border:1px solid #ffffff44;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:850;padding:0 8px}
-    main{max-width:860px;margin:auto;padding:11px 10px 100px}.tab{display:none}.tab.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:11px;box-shadow:0 3px 12px #1231}h2{font-size:18px;margin:0 0 11px}h3{font-size:15px;color:var(--primary);margin:14px 0 7px}p{line-height:1.45}.small{font-size:12px;color:var(--muted);line-height:1.42}.eyebrow{font-size:11px;font-weight:800;color:var(--primary2);text-transform:uppercase;letter-spacing:.04em}
-    label{display:block;font-size:12px;font-weight:780;color:#344b5c;margin:10px 0 5px}input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid #c7d5dc;border-radius:11px;padding:11px 12px}textarea{min-height:210px;resize:vertical;line-height:1.48}.short{min-height:90px}.two{display:grid;grid-template-columns:1fr;gap:8px}.codeRow{display:grid;grid-template-columns:92px 1fr;gap:8px}.patientHint{display:flex;align-items:center;gap:7px;margin-top:7px;min-height:22px}.dot{width:8px;height:8px;border-radius:50%;background:#b9c7cf;flex:none}.dot.on{background:var(--ok)}
-    button{border:0;border-radius:11px;padding:11px 13px;min-height:44px;font-weight:780;font-size:14px;background:var(--primary);color:#fff;cursor:pointer}button.secondary{background:var(--soft);border:1px solid #cadde7;color:var(--primary)}button.ghost{background:#fff;border:1px solid var(--line);color:var(--primary)}button.danger{background:#fff0f0;border:1px solid #efcaca;color:var(--danger)}button:disabled{opacity:.5}.primaryBig{width:100%;font-size:17px;min-height:52px}.mic{width:100%;min-height:56px;font-size:17px;background:linear-gradient(135deg,#1c4e70,#226d8d)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.actions .wide{grid-column:1/-1}.formatBadge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#f7fafb;border-radius:999px;padding:5px 9px;font-size:11px;color:var(--muted);margin:0 0 8px}.addSuggestion{width:100%;margin-top:8px;background:#fff;color:var(--primary);border:1px solid #b9d2df}.guidedScript{border:1px solid #c8dce6;background:#f5fafc;border-radius:11px;padding:11px;margin:9px 0}.guidedStep{padding:7px 0;border-top:1px solid #dbe7ed;line-height:1.45;font-size:13px}.guidedStep:first-child{border-top:0}.exactPhrase{font-style:italic;color:#274b60}
-    .addonBar{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:10px 0 12px}.addonBar button{min-width:0;padding:9px 5px;font-size:12px}
-    .reportSection{border-top:1px solid var(--line);padding:12px 0}.reportSection:first-child{border-top:0}.reportTitle{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}.reportText{font-size:14px;line-height:1.5;white-space:pre-wrap;outline:none;border-radius:7px;padding:2px 1px;min-height:25px}.reportText:focus{box-shadow:0 0 0 2px #b9d8e7}.empty{color:#98a3ab;font-style:italic}.reportText.empty:empty:before{content:'Pulsa para añadir';color:#a1abb2;font-style:italic}
-    details{border:1px solid var(--line);border-radius:12px;background:#fcfdfe;margin:9px 0;overflow:hidden}summary{list-style:none;cursor:pointer;padding:12px 13px;font-weight:820;color:var(--primary);display:flex;justify-content:space-between;align-items:center}summary::-webkit-details-marker{display:none}summary::after{content:'＋';font-size:18px;font-weight:500}details[open] summary::after{content:'−'}.detailBody{border-top:1px solid var(--line);padding:12px 13px;font-size:13px;line-height:1.5}.suggestionBox{padding:10px;border-radius:10px;background:var(--soft);margin:6px 0}.suggestionBox strong{color:var(--primary)}.pharmOption{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;margin:7px 0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-weight:400}.pharmOption input{width:20px;height:20px;margin:2px 0 0;padding:0}.pharmOption strong{color:var(--primary)}.legalBox{border-left:4px solid #9ab8c9;background:#f7fafc;border-radius:10px;padding:10px 11px;margin-top:8px}.traceText{white-space:pre-wrap;font-size:12px;line-height:1.45;color:#53636e}
-    .scaleGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}.scalePanel{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fbfdfe}.scaleItems{display:grid;gap:7px;margin-top:8px}.scaleItem{display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center}.scaleItem label{margin:0;font-weight:650}.scaleScore{font-weight:850;color:var(--primary);font-size:16px}.scaleResult{margin-top:9px;padding:9px;border-radius:9px;background:var(--soft);font-size:13px;line-height:1.45}.scaleNote{font-size:11px;color:var(--muted);margin-top:7px}.photoBox{margin-top:9px;border:1px dashed #b9cdd8;border-radius:11px;padding:10px;background:#f8fbfc}.photoPreview{display:none;width:100%;max-height:360px;object-fit:contain;border-radius:9px;background:#fff;margin-top:8px;border:1px solid var(--line)}.photoPreview.show{display:block}.photoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.cameraLabel{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:11px;background:var(--primary);color:#fff;font-weight:780;font-size:14px;padding:10px;text-align:center}.cameraLabel input{display:none}.stimulusCard{padding:18px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center;margin:10px 0}.clockFace{width:210px;height:210px;max-width:72vw;border:4px solid var(--ink);border-radius:50%;margin:12px auto;position:relative;background:#fff}.clockFace::before{content:'12';position:absolute;top:8px;left:50%;transform:translateX(-50%);font-weight:800}.clockFace::after{content:'6';position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-weight:800}.mini3{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .groupTop{display:grid;grid-template-columns:1fr;gap:8px}.groupSession{border:1px solid var(--line);border-radius:14px;background:#fff;margin-top:10px;overflow:hidden}.groupHero{padding:13px;background:linear-gradient(135deg,#eef6fa,#f7fbfd)}.groupBody{padding:13px}.conceptGrid{display:grid;grid-template-columns:1fr;gap:7px}.concept{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fcfdfe}.concept b{color:var(--primary)}.case{border-left:4px solid var(--primary2);background:#f1f8fb;border-radius:9px;padding:11px;margin:10px 0;line-height:1.48}.dialogue{border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0;background:#fbfcfd}.turn{margin:7px 0}.therapist{color:#1f5a78;font-weight:800}.patient{color:#5f4f78;font-weight:800}.pause{background:#fff7e6;border:1px solid #ead7ab;border-radius:9px;padding:9px;margin:8px 0;font-size:13px}.questions{padding-left:20px;line-height:1.55;font-size:13px}.mcq{display:grid;gap:7px;margin:8px 0}.mcq button{text-align:left;background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:650}.mcq button.correct{border-color:#7ab59d;background:#edf8f3}.mcq button.wrong{border-color:#ddb0b0;background:#fff2f2}.feedback{font-size:12px;color:var(--muted);min-height:18px;margin-top:5px}.values{display:flex;gap:6px;flex-wrap:wrap}.valueChip{border:1px solid #cadde7;border-radius:999px;padding:6px 9px;background:#f5fafc;font-size:12px}.materials{padding-left:20px;font-size:13px;line-height:1.55}.historyItem{border-top:1px solid var(--line);padding:9px 0}.historyItem:first-child{border-top:0}.meta{font-size:11px;color:var(--muted)}
-    .presentation{display:none;position:fixed;inset:0;z-index:100;background:#f8fbfd;color:#14232c;padding:20px;overflow:auto}.presentation.active{display:flex;flex-direction:column}.slide{max-width:1000px;width:100%;margin:auto;flex:1;display:flex;flex-direction:column;justify-content:center}.slide h1{font-size:clamp(28px,6vw,60px);color:var(--primary);margin:0 0 20px}.slide p,.slide li{font-size:clamp(20px,3vw,35px);line-height:1.4}.presentControls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-top:12px}.imageOverlay{display:none;position:fixed;inset:0;z-index:150;background:#07131ce8;padding:16px;align-items:center;justify-content:center;flex-direction:column;gap:12px}.imageOverlay.active{display:flex}.imageOverlay img{max-width:96vw;max-height:80vh;object-fit:contain;border-radius:12px;background:#fff}
-    nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:5px 5px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}nav button{background:transparent;color:#60717c;padding:5px 2px;min-height:55px;font-size:11px;border-radius:9px}nav button.active{background:var(--soft);color:var(--primary)}nav .ico{display:block;font-size:20px;margin-bottom:2px}.settingsLine{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.settingsLine:first-child{border-top:0}.settingsGrid{display:grid;grid-template-columns:1fr;gap:8px}.footer{font-size:10px;color:var(--muted);text-align:center;margin:18px 0}.patientToolbar{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}.patientCard{border:1px solid var(--line);border-radius:14px;background:#fff;margin:9px 0;overflow:hidden}.patientCard summary{padding:12px}.patientHead{display:grid;grid-template-columns:52px 1fr auto;gap:9px;align-items:center;width:100%}.patientCodeBadge{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;font-weight:900;font-size:16px}.patientDx{font-size:13px;font-weight:800;color:var(--ink);line-height:1.3}.patientBrief{font-size:11px;color:#506470;line-height:1.35;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.patientMeta{font-size:11px;color:var(--muted);margin-top:3px}.patientCount{font-size:11px;font-weight:800;color:var(--primary);background:var(--soft);border-radius:999px;padding:5px 7px}.patientBody{border-top:1px solid var(--line);padding:10px 12px}.patientActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}.timeline{border-left:2px solid #cfdee6;margin:5px 0 4px 7px;padding-left:13px}.timelineEntry{position:relative;padding:0 0 14px}.timelineEntry:before{content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:var(--primary2);left:-18px;top:5px}.timelineDate{font-size:11px;color:var(--muted);font-weight:750}.timelineTitle{font-size:13px;font-weight:850;color:var(--primary);margin:2px 0 4px}.timelineText{font-size:12px;line-height:1.45;color:#344b5c;white-space:pre-wrap}.timelineNote{margin-top:6px}.timelineNote summary{padding:7px 9px;font-size:12px}.timelineNote .detailBody{font-size:12px;white-space:pre-wrap}.emptyPatients{text-align:center;padding:24px 10px;color:var(--muted)}
-    @media(max-width:430px){.addonBar{grid-template-columns:repeat(4,1fr)}.addonBar button{font-size:11px;padding:8px 3px}}@media(min-width:640px){.two,.groupTop{grid-template-columns:1fr 1fr}.conceptGrid{grid-template-columns:1fr 1fr}.actions{grid-template-columns:repeat(4,1fr)}.actions .wide{grid-column:auto}.scaleGrid{grid-template-columns:1fr 1fr}.mini3{grid-template-columns:repeat(4,1fr)}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173d5b">
+<meta name="description" content="Psikia Hub v2.3 · dictado por pulsación, segmentación clínica por contexto y mini historia local.">
+<title>Psikia Hub v2.3</title>
+<style>
+:root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b;--violet:#6c5a88}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:11px 13px;box-shadow:0 2px 10px #0002}.head{display:flex;align-items:center;gap:10px;max-width:920px;margin:auto}.logo{width:43px;height:43px;border-radius:13px;background:#fff1;display:grid;place-items:center;font-size:26px;border:1px solid #fff3}.brand{font-size:20px;font-weight:850;line-height:1.05}.sub{font-size:11px;opacity:.85;margin-top:3px}
+main{max-width:920px;margin:auto;padding:10px 10px 104px}.tab{display:none}.tab.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 3px 12px #1231}h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;color:var(--primary);margin:13px 0 7px}p{line-height:1.45}.small{font-size:12px;color:var(--muted);line-height:1.42}.tiny{font-size:10px;color:var(--muted)}.eyebrow{font-size:11px;font-weight:850;color:var(--primary2);text-transform:uppercase;letter-spacing:.04em}
+label{display:block;font-size:12px;font-weight:780;color:#344b5c;margin:9px 0 5px}input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid #c7d5dc;border-radius:11px;padding:10px 11px}textarea{min-height:205px;resize:vertical;line-height:1.48}.short{min-height:76px}.mini{min-height:58px}.two{display:grid;grid-template-columns:1fr;gap:8px}.three{display:grid;grid-template-columns:1fr;gap:8px}.codeRow{display:grid;grid-template-columns:98px 1fr;gap:8px}.row{display:flex;gap:7px;flex-wrap:wrap}.row>*{flex:1}.contextBox{border:1px solid #d5e3ea;background:#f8fbfd;border-radius:11px;padding:9px;margin-top:8px;white-space:pre-wrap}
+button{border:0;border-radius:11px;padding:10px 12px;min-height:44px;font-weight:780;font-size:14px;background:var(--primary);color:#fff;cursor:pointer}button.secondary{background:var(--soft);border:1px solid #cadde7;color:var(--primary)}button.ghost{background:#fff;border:1px solid var(--line);color:var(--primary)}button.danger{background:#fff0f0;border:1px solid #efcaca;color:var(--danger)}button.warn{background:#fff8e8;border:1px solid #ead8a9;color:#76520d}button:disabled{opacity:.5}.big{width:100%;font-size:16px;min-height:52px}.mic{width:100%;min-height:58px;font-size:17px;background:linear-gradient(135deg,#1b4c6d,#217392)}.mic.listening{background:linear-gradient(135deg,#8c3434,#b64b4b)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.actions .wide{grid-column:1/-1}
+.notice{padding:9px 10px;border-radius:10px;font-size:12px;line-height:1.4;margin:8px 0}.notice.ok{background:#edf8f3;border:1px solid #b7dfcf;color:#165b46}.notice.warn{background:#fff7e7;border:1px solid #ead6a8;color:#76520d}.notice.danger{background:#fff0f0;border:1px solid #efcaca;color:#8c3333}.notice.info{background:#eef6fa;border:1px solid #c7dfe9;color:#245871}
+.reportSection{border-top:1px solid var(--line);padding:11px 0}.reportSection:first-child{border-top:0}.reportHead{display:flex;justify-content:space-between;gap:8px;align-items:center}.reportTitle{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase;letter-spacing:.025em}.sourceCount{font-size:10px;color:var(--muted);white-space:nowrap}.reportText{font-size:14px;line-height:1.5;white-space:pre-wrap;outline:none;border-radius:7px;padding:3px 2px;min-height:28px}.reportText:focus{box-shadow:0 0 0 2px #b9d8e7}.reportText.empty{color:#98a3ab;font-style:italic}
+.suggestGrid{display:grid;grid-template-columns:1fr;gap:8px}.suggestion{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfdff}.suggestion b{color:var(--primary)}.suggestion .source{font-size:10px;color:var(--muted);margin-top:5px}.suggestionActions{display:flex;gap:6px;margin-top:8px}.suggestionActions button{min-height:38px;padding:7px 10px}.medGrid{display:grid;grid-template-columns:1fr;gap:8px}.medSlot{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fcfdfe}.medHeader{display:flex;align-items:center;gap:8px}.medHeader input[type=checkbox]{width:20px;height:20px}.medHeader b{color:var(--primary)}.medSlot.disabled{opacity:.58}.pill{display:inline-block;border:1px solid #cadde7;border-radius:999px;padding:4px 8px;background:#f5fafc;font-size:11px;margin:2px}
+.patientSearch{position:sticky;top:73px;z-index:8;background:var(--bg);padding-bottom:4px}.patientCard{border:1px solid var(--line);border-radius:14px;background:#fff;margin:8px 0;overflow:hidden}.patientTop{padding:11px 12px;display:flex;justify-content:space-between;gap:9px;align-items:flex-start}.patientCode{font-size:18px;font-weight:900;color:var(--primary)}.patientDx{font-size:12px;color:#3c5667}.badge{font-size:10px;border-radius:999px;padding:4px 7px;background:var(--soft);color:var(--primary);white-space:nowrap}.patientActions{display:flex;gap:6px;padding:0 12px 10px}.patientActions button{min-height:39px}.entry{border-top:1px solid var(--line);padding:10px 12px}.entryMeta{font-size:10px;color:var(--muted);margin-bottom:4px}.entrySummary{font-size:12px;line-height:1.42}.entry details{margin-top:6px}
+details{border:1px solid var(--line);border-radius:11px;background:#fcfdfe;margin:8px 0;overflow:hidden}summary{cursor:pointer;padding:10px 11px;font-weight:780;color:var(--primary);font-size:13px}.detailBody{border-top:1px solid var(--line);padding:10px 11px;font-size:12px;line-height:1.45;white-space:pre-wrap}
+.groupSession{border-left:4px solid var(--primary2);background:#f5fafc;border-radius:10px;padding:11px;margin:8px 0}.groupHistoryItem{border-top:1px solid var(--line);padding:8px 0}.groupHistoryItem:first-child{border-top:0}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}nav button{background:transparent;color:#60717c;padding:4px 2px;min-height:56px;font-size:10px;border-radius:9px}nav button.active{background:var(--soft);color:var(--primary)}nav .ico{display:block;font-size:20px;margin-bottom:2px}.footer{font-size:10px;color:var(--muted);text-align:center;margin:16px 0}
+@media(min-width:680px){.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}.actions{grid-template-columns:repeat(4,1fr)}.actions .wide{grid-column:auto}.medGrid{grid-template-columns:1fr 1fr}}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
-<header><div class="head"><img class="brandicon" src="icon-192.png?v=4.3" alt=""><div style="min-width:0;flex:1"><div class="brand">Psikia Hub</div><div class="sub">Notas clínicas · psicoterapia · grupos</div></div><span class="versionBadge">v4.3</span><div id="activeUserBadge" class="userBadge" title="Profesional activo">AB</div></div></header>
+<header><div class="head"><div class="logo">⚕️</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.75">v2.2</span></div><div class="sub">Nota nueva limpia · dictado hasta pulsar · motor semántico por plantilla v2.3</div></div></div></header>
 <main>
-  <section id="tab-notes" class="tab active">
-    <div class="card" id="captureCard">
-      <div class="eyebrow">Nueva sesión · <span id="activeUserInline">Profesional</span></div><h2>Dictado clínico</h2>
-      <div class="codeRow"><div><label for="patientCode">Paciente</label><input id="patientCode" maxlength="2" autocomplete="off" autocapitalize="characters" placeholder="A / AB"></div><div><label for="visitType">Tipo de nota</label><select id="visitType">
-        <option value="first">Primera consulta</option><option value="follow">Consulta de seguimiento</option><option value="acute">Consulta en agudos</option><option value="urInitial">UR · valoración/ingreso</option><option value="urFollow">UR · seguimiento</option><option value="pti">UR · PTI</option><option value="discharge">UR · alta</option><option value="emergency">Urgencias</option><option value="medicalGeneral">Consulta médica general</option>
-      </select></div></div>
-      <div class="patientHint"><span id="contextDot" class="dot"></span><span id="contextHint" class="small">Sin contexto previo cargado.</span></div>
-      <label for="raw">Dicta o escribe la consulta</label><textarea id="raw" placeholder="Ej.: desde la última revisión ha mejorado... mantiene escitalopram... exploración... plan..."></textarea>
-      <button id="dictate" class="mic">🎙️ Dictar</button><div id="dictationStatus" class="small" style="margin:7px 2px 0">Guardado automático activo.</div>
-      <div class="actions"><button id="generate" class="wide">Generar nota</button><button id="clear" class="ghost">Nueva</button></div>
+<section id="tab-note" class="tab active">
+  <div class="card">
+    <div class="eyebrow">Paciente y contexto</div>
+    <div class="codeRow"><div><label for="patientCode">Código</label><input id="patientCode" maxlength="8" placeholder="A / AB" autocomplete="off"></div><div><label for="diagnosis">Diagnóstico de presunción</label><input id="diagnosis" placeholder="Opcional · se guarda en mini historia" autocomplete="off"></div></div>
+    <label for="visitType">Contexto de nota</label>
+    <select id="visitType">
+      <option value="initial">Valoración inicial / ingreso</option>
+      <option value="evolution">Evolutivo / seguimiento</option>
+      <option value="pti">Plan de Tratamiento Individualizado (PTI)</option>
+      <option value="discharge">Informe de alta</option>
+      <option value="emergency">Intervención en Urgencias</option>
+    </select>
+    <div id="patientContext" class="contextBox small">Sin contexto longitudinal seleccionado.</div>
+    <div class="row" style="margin-top:7px"><button id="openPatients" class="secondary">👥 Buscar paciente</button><button id="newNoteTop" class="ghost">＋ Nueva nota</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Dictado / texto fuente</h2>
+    <button id="dictate" class="mic">🎙️ Pulsar para dictar</button>
+    <div id="dictationStatus" class="notice info">Una pulsación inicia y otra detiene. Aunque Android reinicie internamente el reconocimiento tras un silencio, la app mantiene una única sesión lógica y no cambia el estado del botón.</div>
+    <textarea id="raw" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Dicta de forma natural. Puedes decir: “motivo de consulta… antecedentes… exploración… riesgo… juicio clínico… plan…”."></textarea>
+    <div class="actions"><button id="generate" class="big">Ordenar nota</button><button id="clearRaw" class="ghost">Borrar texto</button><button id="newNote" class="secondary">Nueva nota</button><button id="copyRaw" class="ghost">Copiar dictado</button></div>
+  </div>
+
+  <div id="reportCard" class="card" hidden>
+    <div class="eyebrow">Borrador segmentado y editable</div><h2 id="reportHeading">Informe</h2>
+    <div id="segmentationAudit"></div><div id="unassignedReview"></div>
+    <div id="reportSections"></div>
+    <div class="actions"><button id="copyReport">Copiar informe</button><button id="savePatient" class="secondary">Guardar evolución</button><button id="emailReport" class="ghost">Enviar correo</button><button id="resegment" class="ghost">Re-segmentar</button></div>
+    <div id="saveHint" class="small" style="margin-top:7px"></div>
+  </div>
+
+  <div id="suggestionCard" class="card" hidden>
+    <div class="eyebrow">Copiloto clínico</div><h2>Pruebas y opciones para revisar</h2>
+    <div class="notice info">Son recordatorios contextuales, no órdenes. Solo pasan al informe cuando pulsas <b>Añadir</b>. Si una propuesta no encaja, descártala.</div>
+    <div id="suggestionList" class="suggestGrid"></div>
+    <div class="row" style="margin-top:9px"><button id="refreshSuggestions" class="secondary">Revisar sugerencias</button><button id="clearSuggestions" class="ghost">Ocultar sugerencias</button></div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Pauta farmacológica concreta</div><h2>Hasta cuatro cambios de medicación</h2>
+    <div class="notice warn">Solo se consignan <b>cambios</b> o pautas nuevas confirmadas. El resto del tratamiento se considera sin cambios. En Urgencias, lo administrado va a “Intervención realizada”; lo pautado para después va a “Epicrisis y disposición”.</div>
+    <div class="medGrid">
+      <div class="medSlot" id="medSlot1"><div class="medHeader"><input type="checkbox" id="medUse1"><b>Cambio 1</b></div><label>Fármaco</label><input id="medName1" list="medList" placeholder="p. ej. escitalopram"><label>Pauta concreta</label><textarea id="medPlan1" class="mini" placeholder="p. ej. Escitalopram 10 mg 1-0-0; en 5 días, 15 mg (1,5-0-0)."></textarea></div>
+      <div class="medSlot" id="medSlot2"><div class="medHeader"><input type="checkbox" id="medUse2"><b>Cambio 2</b></div><label>Fármaco</label><input id="medName2" list="medList" placeholder="p. ej. lorazepam"><label>Pauta concreta</label><textarea id="medPlan2" class="mini" placeholder="Escribe dosis, distribución y duración/condición si procede."></textarea></div>
+      <div class="medSlot" id="medSlot3"><div class="medHeader"><input type="checkbox" id="medUse3"><b>Cambio 3</b></div><label>Fármaco</label><input id="medName3" list="medList" placeholder="tercer cambio, si procede"><label>Pauta concreta</label><textarea id="medPlan3" class="mini" placeholder="Dosis + pauta + duración o escalado/retirada."></textarea></div>
+      <div class="medSlot" id="medSlot4"><div class="medHeader"><input type="checkbox" id="medUse4"><b>Cambio 4</b></div><label>Fármaco</label><input id="medName4" list="medList" placeholder="cuarto cambio, si procede"><label>Pauta concreta</label><textarea id="medPlan4" class="mini" placeholder="Dosis + pauta + duración o escalado/retirada."></textarea></div>
     </div>
-    <div class="card" id="resultCard" hidden>
-      <div class="eyebrow">Borrador</div><h2 id="reportHeading">Nota clínica</h2><div id="formatBadge" class="formatBadge">Formato automático</div><div id="report"></div>
-      <details id="scalesDetails"><summary>Escalas / exploraciones · opcional</summary><div class="detailBody"><div class="small">Solo se incorpora al informe si completas una exploración y pulsas <b>＋ Añadir al informe</b>. Si no la utilizas, no aparece ningún apartado.</div><label for="scaleType">Instrumento / exploración</label><select id="scaleType"><option value="">Seleccionar…</option><option value="motor">Exploración motora breve</option><option value="clock">Test del reloj · foto y registro asistido</option><option value="spiral">Espiral / escritura · temblor y micrografía</option><option value="stimulus">Estímulo visual autorizado · mostrar en pantalla</option><option value="sad">SAD PERSONS · registro orientativo</option><option value="ace">ACE-III · registrar resultado</option><option value="mmse">MMSE · registrar resultado externo</option><option value="asrs">TDAH adulto / ASRS · registrar resultado</option><option value="ipde">IPDE / personalidad · registrar resultado</option><option value="custom">Otra escala / prueba</option></select><div id="scaleWorkspace"></div></div></details>
-      <details id="diagnosticDetails"><summary>Orientación diagnóstica</summary><div class="detailBody"><div id="diagnosticSuggestion"></div><button id="addDiagnostic" class="addSuggestion">＋ Añadir al documento</button></div></details>
-      <details id="investigationsDetails"><summary>Pruebas complementarias · opciones</summary><div class="detailBody"><div id="investigationsSuggestion"></div><button id="addInvestigations" class="addSuggestion">＋ Añadir seleccionadas al documento</button></div></details>
-      <details id="pharmDetails"><summary>Tratamiento farmacológico · opciones</summary><div class="detailBody"><div id="pharmSuggestion"></div><button id="addPharm" class="addSuggestion">＋ Añadir opción seleccionada al documento</button></div></details>
-      <details id="therapyDetails"><summary>Intervención psicoterapéutica</summary><div class="detailBody"><div id="therapySuggestion"></div><button id="addTherapy" class="addSuggestion">＋ Añadir al documento</button></div></details>
-      <details id="traceDetails"><summary>Revisar transcripción origen</summary><div class="detailBody"><div id="traceText" class="traceText"></div></div></details>
-      <div class="actions"><button id="email" class="wide">✉️ Enviar texto al correo</button><button id="copy" class="secondary">Copiar</button><button id="saveContext" class="ghost">Guardar entrada</button></div><div id="saveHint" class="small" style="margin-top:8px"></div>
-    </div>
-  </section>
-  <section id="tab-patients" class="tab">
-    <div class="card"><div class="eyebrow">Historia local resumida</div><h2>Pacientes</h2><div class="small">Cada código conserva todas las entradas guardadas. Se muestran únicamente iniciales/código local, diagnóstico de presunción y resúmenes clínicos; evita introducir identificadores directos.</div><div class="patientToolbar"><input id="patientSearch" type="search" autocomplete="off" placeholder="Buscar por inicial o diagnóstico…"></div><div id="patientsList"><div class="emptyPatients">Todavía no hay pacientes guardados.</div></div></div>
-  </section>
-  <section id="tab-group" class="tab">
-    <div class="card"><div class="eyebrow">Terapia grupal TMG</div><h2>Preparar sesión</h2><div class="groupTop"><div><label for="groupCycle">Ciclo</label><select id="groupCycle"></select></div><div><label for="groupSession">Sesión</label><select id="groupSession"></select></div></div><label for="groupGuidance">Formato de la dinámica</label><select id="groupGuidance"><option value="guided" selected>Muy guiada · baja participación</option><option value="open">Más participativa</option></select><label for="groupFeedback">Cómo viene funcionando el grupo (opcional)</label><textarea id="groupFeedback" class="short" placeholder="Ej.: grupo poco dinámico; mejora si primero trabajan por parejas; la última sesión generó bastante debate."></textarea><button id="prepareGroup" class="primaryBig">Preparar sesión completa</button><div id="groupOutput"></div></div>
-    <div class="card"><details><summary>Histórico de sesiones</summary><div class="detailBody"><div id="groupHistory" class="small">Sin sesiones guardadas.</div><button id="clearGroupHistory" class="danger" style="margin-top:9px">Borrar histórico</button></div></details></div>
-  </section>
-  <section id="tab-settings" class="tab">
-    <div class="card"><div class="eyebrow">Configuración</div><h2>Profesionales</h2><label for="activeUserSelect">Usuario activo</label><select id="activeUserSelect"></select><div class="settingsGrid"><div><label for="newUserName">Añadir profesional</label><input id="newUserName" placeholder="Nombre o iniciales"></div><div><label for="newUserEmail">Correo profesional</label><input id="newUserEmail" type="email" placeholder="usuario@navarra.es"></div></div><div class="actions"><button id="addUser" class="secondary">＋ Añadir usuario</button><button id="deleteUser" class="danger">Eliminar usuario activo</button></div><div class="small" style="margin-top:8px">Los perfiles separan localmente borradores, pacientes, histórico grupal, correo y vocabulario. No constituyen autenticación ni sustituyen las medidas de acceso del dispositivo.</div></div>
-    <div class="card"><div class="eyebrow">Usuario activo</div><h2>Ajustes clínicos</h2><label for="emailAddress">Correo profesional de salida</label><input id="emailAddress" type="email" value="Alejandro.ballesteros.prados@navarra.es">
-      <details><summary>Vocabulario / correcciones de dictado</summary><div class="detailBody"><div class="small">Opcional. Una corrección por línea con el formato <b>texto oído =&gt; texto correcto</b>. No se aplican sustituciones automáticas de diagnósticos ni fármacos salvo las que escriba el propio usuario.</div><textarea id="customVocabulary" class="short" placeholder="parásicosis => para psicosis&#10;logicismos => neologismos"></textarea><button id="saveVocabulary" class="secondary" style="margin-top:8px">Guardar correcciones</button></div></details>
-      <div class="settingsLine"><div><b>Contextos locales</b><div class="small">Mini historia longitudinal por código local: todas las entradas, diagnóstico de presunción, tratamiento y resumen.</div></div><button id="clearPatients" class="danger">Borrar</button></div>
-      <details><summary>Fuentes clínicas del motor</summary><div class="detailBody"><p><b>Base clínica integrada:</b> <i>Kaplan &amp; Sadock’s Pocket Handbook of Clinical Psychiatry</i>, <i>The Maudsley Prescribing Guidelines in Psychiatry</i> 15e y <i>Stahl’s Prescriber’s Guide</i> 8e.</p><p><b>Diagnóstico:</b> DSM-5-TR como referencia de criterios; Kaplan amplía diagnóstico diferencial, evaluación médica y pruebas complementarias.</p><p><b>Actualización:</b> guías clínicas vigentes y AEMPS/CIMA se usan como capa de contraste para recomendaciones actuales, indicaciones, restricciones, interacciones y ficha técnica.</p><p class="small">La PWA contiene reglas breves y paráfrasis, no los textos de los manuales. Toda propuesta debe ser revisada por el psiquiatra.</p></div></details>
-      <details><summary>Marco de uso y responsabilidad</summary><div class="detailBody"><div class="legalBox"><b>Proyecto no comercial.</b> Psikia Hub es una herramienta experimental de apoyo a la documentación y organización clínica. El profesional debe revisar y validar cualquier nota, diagnóstico sugerido, prueba complementaria, tratamiento o intervención antes de incorporarlo a la historia clínica.</div><p>El diseño prioriza minimización de datos, almacenamiento local y uso de códigos no identificativos. Está orientado al marco español de RGPD y LOPDGDD y a las normas de documentación clínica aplicables, incluida la normativa sanitaria de Navarra. Esto no equivale a una certificación jurídica, de seguridad o de producto sanitario.</p><p>La adecuación final depende también del dispositivo, navegador, correo, políticas del centro y autorizaciones internas.</p></div></details>
-      <div class="settingsLine"><div><b>Actualizar aplicación</b><div class="small">Borra la caché de la PWA y fuerza la carga del motor actual si el móvil muestra una versión antigua.</div></div><button id="forceUpdate" class="secondary">Actualizar</button></div>
-      <div class="small" style="margin-top:10px">Versión 4.3 · pacientes longitudinales + nueva nota limpia + dictado reinicializable + urgencias</div>
-    </div>
-  </section>
+    <datalist id="medList"><option>escitalopram</option><option>sertralina</option><option>fluoxetina</option><option>vortioxetina</option><option>venlafaxina</option><option>duloxetina</option><option>mirtazapina</option><option>trazodona</option><option>bupropion</option><option>lorazepam</option><option>clonazepam</option><option>diazepam</option><option>quetiapina</option><option>olanzapina</option><option>risperidona</option><option>aripiprazol</option><option>paliperidona</option><option>haloperidol</option><option>clozapina</option><option>lamotrigina</option><option>litio</option><option>valproato</option><option>carbamazepina</option><option>pregabalina</option><option>atomoxetina</option><option>metilfenidato</option><option>lisdexanfetamina</option><option>zolpidem</option></datalist>
+    <div class="row" style="margin-top:9px"><button id="applyMeds">Añadir pautas confirmadas</button><button id="detectMeds" class="secondary">Detectar del dictado</button><button id="clearMeds" class="ghost">Limpiar pautas</button></div>
+    <div id="medHint" class="small" style="margin-top:7px"></div>
+  </div>
+</section>
+
+<section id="tab-patients" class="tab">
+  <div class="patientSearch"><div class="card"><h2>Pacientes / mini historia local</h2><input id="patientFilter" placeholder="Buscar por inicial/código o diagnóstico" autocomplete="off"><div class="small" style="margin-top:6px">Cada entrada queda separada. Abrir un paciente inicia una nota vacía: nunca carga el texto de la nota anterior.</div></div></div>
+  <div id="patientList"></div>
+</section>
+
+<section id="tab-group" class="tab">
+  <div class="card"><div class="eyebrow">Terapia grupal TMG</div><h2>Sesión</h2><div class="two"><div><label>Ciclo</label><select id="groupCycle"></select></div><div><label>Sesión</label><select id="groupSession"></select></div></div><label>Feedback del grupo anterior</label><textarea id="groupFeedback" class="short" placeholder="Participación, comprensión, tensión, ritmo, etc."></textarea><button id="prepareGroup" style="margin-top:8px">Preparar sesión</button><div id="groupOutput"></div></div>
+  <div class="card"><h2>Histórico grupal local</h2><div id="groupHistory"></div><button id="clearGroupHistory" class="danger" style="margin-top:8px">Borrar histórico grupal</button></div>
+</section>
+
+<section id="tab-settings" class="tab">
+  <div class="card"><h2>Ajustes</h2><label>Correo profesional</label><input id="emailAddress" type="email" value="Alejandro.ballesteros.prados@navarra.es" autocomplete="off"><button id="saveSettings" style="margin-top:8px">Guardar ajustes</button></div>
+  <div class="card"><h2>Comportamiento de notas</h2><div class="notice ok"><b>Nota de trabajo efímera:</b> el dictado y el informe actual no se guardan en localStorage. Al reabrir la app se parte de cero. Solo se conservan las entradas que guardes explícitamente en la mini historia.</div><div class="notice info"><b>Segmentación v2.3:</b> cada tipo de nota usa un perfil propio. Divide el dictado por encabezados, transiciones clínicas y cláusulas; prioriza reglas de Urgencias para riesgo, colateral, organicidad, intervención y disposición; y deja aparte los fragmentos dudosos en vez de volcarlos a un campo incorrecto.</div></div>
+  <div class="card"><h2>Datos locales</h2><button id="clearPatients" class="danger">Borrar mini historias de pacientes</button><p class="small">No borra los ajustes de correo ni el histórico grupal.</p></div>
+</section>
+<div class="footer">Psikia Hub v2.3 · borrador clínico revisable · sin servidor propio en esta versión</div>
 </main>
-<nav><button data-tab="notes" class="active"><span class="ico">🎙️</span>Notas</button><button data-tab="patients"><span class="ico">🗂️</span>Pacientes</button><button data-tab="group"><span class="ico">👥</span>Grupo</button><button data-tab="settings"><span class="ico">⚙️</span>Ajustes</button></nav>
-<div id="imageOverlay" class="imageOverlay" aria-hidden="true"><img id="imageOverlayImg" alt="Material visual"><button id="closeImageOverlay" class="secondary">Cerrar imagen</button></div>
-<div id="presentation" class="presentation" aria-hidden="true"><div id="slide" class="slide"></div><div class="presentControls"><button id="prevSlide" class="secondary">← Anterior</button><button id="nextSlide">Siguiente →</button><button id="closePresentation" class="ghost">Cerrar</button></div></div>
-<script src="app.js?v=4.3"></script>
-<script src="clinical-v42.js?v=4.3"></script>
-<script src="urgencias_extension.js?v=4.3"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=4.3',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{})}</script>
+<nav>
+<button data-tab="note" class="active"><span class="ico">📝</span>Nota</button>
+<button data-tab="patients"><span class="ico">👥</span>Pacientes</button>
+<button data-tab="group"><span class="ico">🧩</span>Grupo</button>
+<button data-tab="settings"><span class="ico">⚙️</span>Ajustes</button>
+</nav>
+<script>
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const uniq=arr=>{const seen=new Set();return arr.filter(x=>{const k=norm(x).replace(/[^a-z0-9áéíóúñ]+/g,' ').trim();if(!k||seen.has(k))return false;seen.add(k);return true})};
+
+const templates={
+ initial:{label:'Valoración inicial / ingreso',sections:[
+  'Motivo de consulta / derivación','Antecedentes médicos / alergias','Antecedentes psiquiátricos personales','Antecedentes familiares psiquiátricos','Consumo de sustancias','Situación personal, social y funcional','Tratamiento farmacológico previo / actual','Enfermedad actual / evolución longitudinal','Exploración psicopatológica','Valoración de riesgos','Pruebas complementarias','Juicio clínico / diagnóstico','Plan de tratamiento e intervención','Seguimiento / disposición']},
+ evolution:{label:'Evolutivo / seguimiento',sections:[
+  'Resumen clínico longitudinal','Evolución desde la última revisión','Funcionamiento / rehabilitación','Adherencia, tolerancia y tratamiento actual','Exploración psicopatológica comparativa','Valoración de riesgos','Pruebas / incidencias clínicas','Juicio clínico','Plan de tratamiento','Próxima revisión / coordinación']},
+ pti:{label:'Plan de Tratamiento Individualizado (PTI)',sections:[
+  'Resumen clínico y funcional','Necesidades / problemas activos','Riesgos y factores protectores','Objetivos del ingreso','Intervención de Psiquiatría','Intervención de Psicología','Intervención de Enfermería','Intervención de Terapia Ocupacional','Intervención de Trabajo Social','Otras intervenciones / coordinación','Indicadores de seguimiento y revisión']},
+ discharge:{label:'Informe de alta',sections:[
+  'Motivo y contexto del ingreso','Antecedentes relevantes','Evolución durante el ingreso','Intervenciones realizadas','Exploración psicopatológica al alta','Valoración de riesgos al alta','Pruebas complementarias relevantes','Diagnóstico al alta','Tratamiento al alta','Situación funcional al alta','Epicrisis','Plan de seguimiento y recursos']},
+ emergency:{label:'Intervención en Urgencias',sections:[
+  'Motivo de consulta','Antecedentes relevantes','Situación precipitante / enfermedad actual','Información colateral relevante','Exploración psicopatológica','Valoración de riesgos','Valoración médico-orgánica y pruebas complementarias','Juicio clínico','Intervención realizada','Respuesta / evolución durante Urgencias','Epicrisis y disposición']}
+};
+
+const cues={
+ 'Motivo de consulta / derivación':['motivo','derivad','consulta por','remitid','ingreso por','acude por','traido por','traída por'],
+ 'Motivo de consulta':['motivo','consulta por','acude por','traido por','traída por','derivad','policia','ambulancia'],
+ 'Motivo y contexto del ingreso':['motivo','ingreso por','contexto del ingreso','derivado','derivada'],
+ 'Antecedentes médicos / alergias':['antecedentes medicos','antecedentes somaticos','alergia','hipertension','diabetes','cardiop','renal','hepatic','neurolog','quirurg','epilep'],
+ 'Antecedentes psiquiátricos personales':['antecedentes psiqui','ingresos previos','episodios previos','salud mental','diagnostico previo','tratamientos previos','intentos previos'],
+ 'Antecedentes familiares psiquiátricos':['antecedentes familiares','familiares psiqui','madre','padre','hermano','hermana'],
+ 'Antecedentes relevantes':['antecedentes','previo','historia previa','ingresos previos','diagnostico previo','tratamiento previo','somatico','alergia'],
+ 'Consumo de sustancias':['consumo','alcohol','cannabis','cocaina','cocaína','opiace','heroina','heroína','anfetamina','toxic','tabaco','abstinencia','intoxicacion'],
+ 'Situación personal, social y funcional':['convive','pareja','hijos','familia','trabaja','laboral','desemple','pension','autocuidado','avd','social','aislamiento','vivienda','ocupacional'],
+ 'Tratamiento farmacológico previo / actual':['tratamiento actual','tratamiento farmac','toma','mg','miligr','pauta','medicacion habitual','medicación habitual','adherencia'],
+ 'Enfermedad actual / evolución longitudinal':['enfermedad actual','desde hace','actualmente','inicio','empeora','mejora','ultimas semanas','últimas semanas','meses','desencaden','sintomas actuales','síntomas actuales'],
+ 'Resumen clínico longitudinal':['diagnostico de base','diagnóstico de base','historia longitudinal','resumen clinico','resumen clínico','desde el ingreso','antecedentes de interes'],
+ 'Evolución desde la última revisión':['desde la ultima','desde la última','ultima revision','última revisión','ha mejorado','ha empeorado','persiste','evolucion','evolución','respuesta','se mantiene'],
+ 'Funcionamiento / rehabilitación':['autocuidado','avd','grupo','actividad','ocupacional','laboral','social','salidas','rehabilit','rutina','deporte'],
+ 'Adherencia, tolerancia y tratamiento actual':['adherencia','tolerancia','efectos secundarios','tratamiento actual','toma','mg','pauta','cumplimiento','inyectable'],
+ 'Exploración psicopatológica':['exploracion','exploración','consciente','orientad','colaborador','contacto','discurso','lenguaje','afecto','hipotimia','eutimia','ansiedad','delir','alucin','ideacion','ideación','psicomot','insight','conciencia de enfermedad','sueño','apetito'],
+ 'Exploración psicopatológica comparativa':['exploracion','exploración','consciente','orientad','discurso','afecto','hipotimia','eutimia','ansiedad','delir','alucin','ideacion','ideación','psicomot','sueño','apetito','respecto a'],
+ 'Exploración psicopatológica al alta':['exploracion','exploración','al alta','consciente','orientad','discurso','afecto','delir','alucin','ideacion','planes de futuro'],
+ 'Valoración de riesgos':['riesgo','suicid','autoles','heteroagres','agresiv','violencia','impulsiv','vulnerab','autocuidado','intoxic','protector','planes de futuro','arma','fuga'],
+ 'Valoración de riesgos al alta':['riesgo','suicid','autoles','heteroagres','protector','al alta','planes de futuro','vulnerab'],
+ 'Riesgos y factores protectores':['riesgo','suicid','autoles','heteroagres','vulnerab','protector','apoyo familiar','adherencia'],
+ 'Pruebas complementarias':['analit','analítica','ecg','electrocard','tac','tc ','resonancia','rmn','orina','toxicologia','toxicología','niveles','radiografia','radiografía'],
+ 'Pruebas / incidencias clínicas':['analit','ecg','incidencia','urgencia','somatico','somático','caida','caída','efecto adverso','niveles'],
+ 'Pruebas complementarias relevantes':['analit','ecg','tac','resonancia','niveles','prueba','resultado'],
+ 'Valoración médico-orgánica y pruebas complementarias':['constantes','tension arterial','tensión arterial','temperatura','saturacion','exploracion fisica','exploración física','analit','ecg','electrocard','toxic','orina','tac','tc ','organico','orgánico','neurolog','glucemia'],
+ 'Juicio clínico / diagnóstico':['juicio clinico','juicio clínico','diagnost','impresion clinica','impresión clínica','compatible con','sindrome','síndrome'],
+ 'Juicio clínico':['juicio clinico','juicio clínico','diagnost','impresion','impresión','compatible con','sindrome','síndrome','diferencial'],
+ 'Diagnóstico al alta':['diagnostico al alta','diagnóstico al alta','diagnost','cie','f20','f31','f32','f33','f41','f60'],
+ 'Plan de tratamiento e intervención':['plan','indicamos','pautamos','iniciar','aumentar','subir','disminuir','retirar','mantener','derivar','psicolog','enfermer','terapia ocupacional','trabajo social'],
+ 'Plan de tratamiento':['plan','iniciar','aumentar','subir','disminuir','retirar','mantener','pautar','cambio de tratamiento','objetivo'],
+ 'Seguimiento / disposición':['seguimiento','cita','revision','revisión','alta','ingreso','derivacion','derivación','control'],
+ 'Próxima revisión / coordinación':['proxima','próxima','revision','revisión','cita','coordina','seguimiento','mes','semana'],
+ 'Necesidades / problemas activos':['necesidad','problema','dificultad','déficit','deficit','precisa','requiere','dependencia'],
+ 'Objetivos del ingreso':['objetivo','objetivos','meta','se propone','mejorar','mantener','reducir'],
+ 'Intervención de Psiquiatría':['psiquiatr','farmaco','fármaco','medicacion','medicación','pauta','diagnost','ajuste'],
+ 'Intervención de Psicología':['psicolog','psicoterapia','cognitiv','dbt','mentaliz','act ','mindfulness'],
+ 'Intervención de Enfermería':['enfermer','adherencia','educacion sanitaria','educación sanitaria','constantes','cuidados'],
+ 'Intervención de Terapia Ocupacional':['terapia ocupacional','ocupacional','avd','actividad','rutina','taller'],
+ 'Intervención de Trabajo Social':['trabajo social','social','prestacion','prestación','vivienda','empleo','recurso residencial'],
+ 'Otras intervenciones / coordinación':['coordina','familia','csM','centro de salud mental','etac','recurso','derivacion'],
+ 'Indicadores de seguimiento y revisión':['indicador','revisar objetivo','seguimiento','participacion','participación','autonomia','autonomía','funcionamiento'],
+ 'Evolución durante el ingreso':['evolucion','evolución','durante el ingreso','progresivamente','mejoria','mejoría','respuesta','estabiliza'],
+ 'Intervenciones realizadas':['intervencion','intervención','se realiza','se realizó','tratamiento','psicoeduc','coordinacion','coordinación'],
+ 'Tratamiento al alta':['tratamiento al alta','pauta al alta','mg','mantener','retirar','iniciar'],
+ 'Situación funcional al alta':['funcional','autocuidado','avd','laboral','social','al alta','autonomia','autonomía'],
+ 'Epicrisis':['epicrisis','resumen final','en conjunto','tras evolucion','tras evolución'],
+ 'Plan de seguimiento y recursos':['seguimiento','cita','recurso','centro de salud mental','csM','derivacion','derivación','revision','revisión'],
+ 'Situación precipitante / enfermedad actual':['precipitante','desencaden','tras','despues de','después de','desde hace','hoy','ayer','ultimas horas','últimas horas','actualmente','empeoramiento','crisis','agudizacion','agudización'],
+ 'Información colateral relevante':['informacion colateral','información colateral','segun familia','según familia','refiere la familia','madre refiere','padre refiere','pareja refiere','policia refiere','policía refiere','acompañante','se contacta con','llamada a'],
+ 'Intervención realizada':['se administra','administramos','se pauta en urgencias','contencion','contención','desescalada','reduccion de estimulos','reducción de estímulos','observacion','observación','medidas de seguridad','se realiza','se contacta'],
+ 'Respuesta / evolución durante Urgencias':['durante urgencias','tras la administracion','tras la administración','posteriormente','evoluciona','se calma','cede','persiste','respuesta','reevaluacion','reevaluación'],
+ 'Epicrisis y disposición':['epicrisis','alta a domicilio','alta domiciliaria','ingreso','observacion','observación','derivacion','derivación','acompañado','acompañada','seguimiento','plan inmediato','disposicion','disposición']
+};
+
+const headerPatterns=[
+ {re:/^(?:motivo(?: de consulta| y contexto del ingreso)?|consulta)\s*[:\-]?\s*/i,keys:['Motivo de consulta','Motivo de consulta / derivación','Motivo y contexto del ingreso']},
+ {re:/^antecedentes medicos?\s*[:\-]?\s*/i,keys:['Antecedentes médicos / alergias']},
+ {re:/^antecedentes psiquiatricos?\s*[:\-]?\s*/i,keys:['Antecedentes psiquiátricos personales']},
+ {re:/^antecedentes familiares?\s*[:\-]?\s*/i,keys:['Antecedentes familiares psiquiátricos']},
+ {re:/^antecedentes(?: relevantes)?\s*[:\-]?\s*/i,keys:['Antecedentes relevantes']},
+ {re:/^(?:consumo|sustancias|toxicos|tóxicos)\s*[:\-]?\s*/i,keys:['Consumo de sustancias']},
+ {re:/^(?:situacion social|situación social|situacion funcional|situación funcional)\s*[:\-]?\s*/i,keys:['Situación personal, social y funcional','Funcionamiento / rehabilitación','Situación funcional al alta']},
+ {re:/^(?:tratamiento actual|tratamiento farmacologico|tratamiento farmacológico)\s*[:\-]?\s*/i,keys:['Tratamiento farmacológico previo / actual','Adherencia, tolerancia y tratamiento actual']},
+ {re:/^(?:enfermedad actual|evolucion actual|evolución actual)\s*[:\-]?\s*/i,keys:['Enfermedad actual / evolución longitudinal','Situación precipitante / enfermedad actual','Evolución desde la última revisión']},
+ {re:/^(?:informacion colateral|información colateral)\s*[:\-]?\s*/i,keys:['Información colateral relevante']},
+ {re:/^(?:exploracion|exploración|exploracion psicopatologica|exploración psicopatológica)\s*[:\-]?\s*/i,keys:['Exploración psicopatológica','Exploración psicopatológica comparativa','Exploración psicopatológica al alta']},
+ {re:/^(?:riesgo|valoracion de riesgo|valoración de riesgo|riesgos)\s*[:\-]?\s*/i,keys:['Valoración de riesgos','Valoración de riesgos al alta','Riesgos y factores protectores']},
+ {re:/^(?:valoracion organica|valoración orgánica|pruebas|pruebas complementarias)\s*[:\-]?\s*/i,keys:['Valoración médico-orgánica y pruebas complementarias','Pruebas complementarias','Pruebas / incidencias clínicas','Pruebas complementarias relevantes']},
+ {re:/^(?:juicio clinico|juicio clínico|diagnostico|diagnóstico)\s*[:\-]?\s*/i,keys:['Juicio clínico','Juicio clínico / diagnóstico','Diagnóstico al alta']},
+ {re:/^(?:intervencion realizada|intervención realizada)\s*[:\-]?\s*/i,keys:['Intervención realizada','Intervenciones realizadas']},
+ {re:/^(?:respuesta|evolucion en urgencias|evolución en urgencias)\s*[:\-]?\s*/i,keys:['Respuesta / evolución durante Urgencias']},
+ {re:/^(?:epicrisis|disposicion|disposición)\s*[:\-]?\s*/i,keys:['Epicrisis','Epicrisis y disposición']},
+ {re:/^(?:plan|plan de tratamiento)\s*[:\-]?\s*/i,keys:['Plan de tratamiento','Plan de tratamiento e intervención','Plan de seguimiento y recursos']}
+];
+
+function template(){return templates[$('#visitType').value]}
+
+// ---- Motor de campos v2.2 ----
+// Principio: cada contexto tiene un perfil propio. Los fragmentos con baja confianza
+// NO se fuerzan a un campo: quedan visibles para revisión.
+const typePriority={
+ initial:['Motivo de consulta / derivación','Antecedentes médicos / alergias','Antecedentes psiquiátricos personales','Antecedentes familiares psiquiátricos','Consumo de sustancias','Situación personal, social y funcional','Tratamiento farmacológico previo / actual','Enfermedad actual / evolución longitudinal','Exploración psicopatológica','Valoración de riesgos','Pruebas complementarias','Juicio clínico / diagnóstico','Plan de tratamiento e intervención','Seguimiento / disposición'],
+ evolution:['Evolución desde la última revisión','Funcionamiento / rehabilitación','Adherencia, tolerancia y tratamiento actual','Exploración psicopatológica comparativa','Valoración de riesgos','Pruebas / incidencias clínicas','Juicio clínico','Plan de tratamiento','Próxima revisión / coordinación','Resumen clínico longitudinal'],
+ pti:['Resumen clínico y funcional','Necesidades / problemas activos','Riesgos y factores protectores','Objetivos del ingreso','Intervención de Psiquiatría','Intervención de Psicología','Intervención de Enfermería','Intervención de Terapia Ocupacional','Intervención de Trabajo Social','Otras intervenciones / coordinación','Indicadores de seguimiento y revisión'],
+ discharge:['Motivo y contexto del ingreso','Antecedentes relevantes','Evolución durante el ingreso','Intervenciones realizadas','Exploración psicopatológica al alta','Valoración de riesgos al alta','Pruebas complementarias relevantes','Diagnóstico al alta','Tratamiento al alta','Situación funcional al alta','Epicrisis','Plan de seguimiento y recursos'],
+ emergency:['Motivo de consulta','Antecedentes relevantes','Situación precipitante / enfermedad actual','Información colateral relevante','Exploración psicopatológica','Valoración de riesgos','Valoración médico-orgánica y pruebas complementarias','Juicio clínico','Intervención realizada','Respuesta / evolución durante Urgencias','Epicrisis y disposición']
+};
+
+const semanticBoundaries=[
+ 'motivo de consulta','antecedentes médicos','antecedentes medicos','antecedentes psiquiátricos','antecedentes psiquiatricos','antecedentes familiares','antecedentes relevantes','consumo de sustancias','situación social','situacion social','situación funcional','situacion funcional','tratamiento farmacológico','tratamiento farmacologico','enfermedad actual','evolución actual','evolucion actual','información colateral','informacion colateral','exploración psicopatológica','exploracion psicopatologica','valoración de riesgos','valoracion de riesgos','valoración orgánica','valoracion organica','pruebas complementarias','juicio clínico','juicio clinico','intervención realizada','intervencion realizada','respuesta en urgencias','evolución en urgencias','evolucion en urgencias','epicrisis','disposición','disposicion','plan de tratamiento','resumen clínico y funcional','resumen clinico y funcional','necesidades / problemas activos','riesgos y factores protectores','objetivos del ingreso','intervención de psiquiatría','intervencion de psiquiatria','intervención de psicología','intervencion de psicologia','intervención de enfermería','intervencion de enfermeria','intervención de terapia ocupacional','intervencion de terapia ocupacional','intervención de trabajo social','intervencion de trabajo social','indicadores de seguimiento','evolución durante el ingreso','evolucion durante el ingreso','tratamiento al alta','situación funcional al alta','situacion funcional al alta','plan de seguimiento'
+];
+
+function escapeRe(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function splitSpeechText(text){
+ let t=String(text||'').replace(/\r/g,'\n').replace(/\u00a0/g,' ');
+ t=t.replace(/\s+(punto y aparte|nueva linea|nueva línea)\s+/gi,'.\n').replace(/\s+punto\s+/gi,'. ');
+ // Encabezados hablados: fuerzan un corte aunque el reconocimiento no ponga puntuación.
+ semanticBoundaries.sort((a,b)=>b.length-a.length).forEach(m=>{
+   const re=new RegExp(`\\s+(?=${escapeRe(m)}\\b)`,'gi'); t=t.replace(re,'\n');
+ });
+ // Transiciones clínicas frecuentes dentro de frases largas.
+ const transitions=['según su madre','segun su madre','según el padre','segun el padre','según la pareja','segun la pareja','a la exploración','a la exploracion','en la exploración','en la exploracion','niega ideación','niega ideacion','presenta ideación','presenta ideacion','niega ideas de suicidio','refiere ideas de suicidio','se administra','se ha administrado','se pauta','se prescribe','se indica','se realiza','tras la administración','tras la administracion','posteriormente','se decide alta','se decide ingreso','se deriva','se pauta al alta','se indica al alta'];
+ transitions.forEach(m=>{const re=new RegExp(`[,;]?\\s+(?=${escapeRe(m)}\\b)`,'gi');t=t.replace(re,'\n')});
+ // Frases + cláusulas largas. No partir por cada coma para no destrozar el relato.
+ let parts=t.split(/\n+|(?<=[.!?;])\s+/).map(x=>x.trim()).filter(Boolean);
+ const out=[];
+ for(const p of parts){
+   if(p.length<240){out.push(p);continue}
+   const sub=p.split(/,\s+(?=(?:pero|aunque|mientras|posteriormente|actualmente|además|ademas|niega|refiere|presenta|mantiene|se administra|se realiza|se decide|se contacta|según|segun)\b)/i).map(x=>x.trim()).filter(Boolean);
+   out.push(...sub);
+ }
+ return out;
+}
+
+function explicitSection(chunk,sections){
+ const profileHeaders=[
+  [/^resumen clinico y funcional\s*[:\-]?\s*/i,'Resumen clínico y funcional'],[/^necesidades(?: \/ problemas activos)?\s*[:\-]?\s*/i,'Necesidades / problemas activos'],[/^riesgos y factores protectores\s*[:\-]?\s*/i,'Riesgos y factores protectores'],[/^objetivos?(?: del ingreso)?\s*[:\-]?\s*/i,'Objetivos del ingreso'],
+  [/^(?:intervencion de )?psiquiatria\s*[:\-]?\s*/i,'Intervención de Psiquiatría'],[/^(?:intervencion de )?psicologia\s*[:\-]?\s*/i,'Intervención de Psicología'],[/^(?:intervencion de )?enfermeria\s*[:\-]?\s*/i,'Intervención de Enfermería'],[/^(?:intervencion de )?terapia ocupacional\s*[:\-]?\s*/i,'Intervención de Terapia Ocupacional'],[/^(?:intervencion de )?trabajo social\s*[:\-]?\s*/i,'Intervención de Trabajo Social'],[/^otras intervenciones(?: \/ coordinacion)?\s*[:\-]?\s*/i,'Otras intervenciones / coordinación'],[/^indicadores(?: de seguimiento(?: y revision)?)?\s*[:\-]?\s*/i,'Indicadores de seguimiento y revisión'],
+  [/^evolucion durante el ingreso\s*[:\-]?\s*/i,'Evolución durante el ingreso'],[/^tratamiento al alta\s*[:\-]?\s*/i,'Tratamiento al alta'],[/^situacion funcional al alta\s*[:\-]?\s*/i,'Situación funcional al alta'],[/^plan de seguimiento(?: y recursos)?\s*[:\-]?\s*/i,'Plan de seguimiento y recursos'],[/^epicrisis\s*[:\-]?\s*/i,'Epicrisis'],
+  [/^respuesta(?: \/ evolucion)? durante urgencias\s*[:\-]?\s*/i,'Respuesta / evolución durante Urgencias'],[/^epicrisis y disposicion\s*[:\-]?\s*/i,'Epicrisis y disposición']
+ ];
+ const n=norm(chunk);
+ for(const [re,key] of profileHeaders){if(!sections.includes(key))continue;const m=n.match(re);if(m)return {section:key,text:chunk.slice(m[0].length).trim(),explicit:true}}
+ for(const p of headerPatterns){const key=p.keys.find(k=>sections.includes(k));if(key&&p.re.test(n)){return {section:key,text:chunk.replace(p.re,'').trim(),explicit:true}}}
+ return null;
+}
+
+function cleanClinicalFragment(raw){
+ let x=String(raw||'').trim();
+ x=x.replace(/^(?:bueno|vale|pues|a ver|entonces)[, ]+/i,'');
+ x=x.replace(/^el paciente (?:dice|comenta) que\s+/i,'Refiere que ')
+    .replace(/^la paciente (?:dice|comenta) que\s+/i,'Refiere que ')
+    .replace(/^paciente (?:dice|comenta) que\s+/i,'Refiere que ')
+    .replace(/^me (?:dice|comenta|refiere) que\s+/i,'Refiere que ');
+ x=x.replace(/^segun la madre\b/i,'Según la madre').replace(/^segun el padre\b/i,'Según el padre').replace(/^segun la familia\b/i,'Según la familia');
+ x=x.replace(/\s+/g,' ').trim();
+ if(!x)return '';
+ x=x.charAt(0).toUpperCase()+x.slice(1);
+ if(!/[.!?;:]$/.test(x))x+='.';
+ return x;
+}
+
+function genericScore(sec,s){
+ const n=norm(s);let sc=0;
+ for(const c of (cues[sec]||[])){const cn=norm(c);if(n.includes(cn))sc+=cn.includes(' ')?3:1}
+ // Señales clínicas de alta especificidad.
+ if(/suicid|autoles|heteroagres|violenc|arma|protector|vulnerab|impulsiv/.test(n)&&/riesgo|protect/.test(norm(sec)))sc+=8;
+ if(/delir|alucin|orientad|discurso|afecto|hipotim|eutim|psicomot|conciencia de enfermedad|insight/.test(n)&&/exploracion/.test(norm(sec)))sc+=7;
+ if(/diagnost|compatible con|sindrome|diferencial|impresion clinica/.test(n)&&/(juicio|diagnostico)/.test(norm(sec)))sc+=7;
+ if(/analit|ecg|electrocard|toxic|glucemia|constantes|exploracion fisica|tac|resonancia/.test(n)&&/(pruebas|organica|incidencias)/.test(norm(sec)))sc+=7;
+ return sc;
+}
+
+function emergencyRoute(s,index){
+ const n=norm(s),primary=[],extra=[];
+ const has=(r)=>r.test(n);
+ // Orden de especificidad. En los primeros fragmentos, una frase de presentación conserva el motivo aunque contenga riesgo.
+ if(index<=1 && has(/(?:acude por|consulta por|traid[oa] por|derivad[oa] por|motivo de consulta|ambulancia|policia)/))primary.push('Motivo de consulta');
+ else if(has(/(?:se administra|administramos|se ha administrado|desescalad|contencion|reduccion de estimulos|medidas de seguridad)/))primary.push('Intervención realizada');
+ else if(has(/(?:se pauta|se prescribe|se indica|se recomienda).*(?:mg|comprim|via|oral|intramuscular|im\b|noche|manana|mañana|dias|días)/))primary.push('Epicrisis y disposición');
+ else if(has(/(?:tras la administracion|tras medicacion|posteriormente|reevalu|se calma|cede la agitacion|mejora durante|evoluciona durante|persiste durante)/))primary.push('Respuesta / evolución durante Urgencias');
+ else if(has(/(?:alta a domicilio|alta domiciliaria|se decide alta|se decide ingreso|ingreso en|derivacion|se deriva|queda en observacion|seguimiento por|cita en|acompanad[oa]|disposicion)/) && !has(/ingresos? previos?/))primary.push('Epicrisis y disposición');
+ else if(has(/(?:segun (?:su )?(?:madre|padre|familia|pareja|acompanante)|refiere (?:la )?(?:madre|padre|familia|pareja)|informacion colateral|se contacta con (?:la )?familia|policia refiere)/))primary.push('Información colateral relevante');
+ else if(has(/(?:constantes|tension arterial|temperatura|saturacion|exploracion fisica|analit|ecg|electrocard|toxicologia|toxicologico|glucemia|orina|tac|tc craneal|resonancia|neurolog)/))primary.push('Valoración médico-orgánica y pruebas complementarias');
+ else if(has(/(?:juicio clinico|diagnost|compatible con|impresion clinica|sindrome|diferencial)/))primary.push('Juicio clínico');
+ else if(has(/(?:suicid|autoles|heteroagres|agresiv|violenc|impulsiv|vulnerab|riesgo|protector|arma|fuga)/))primary.push('Valoración de riesgos');
+ else if(has(/(?:consciente|orientad|colaborador|contacto|discurso|lenguaje|afecto|hipotim|eutim|ansiedad|delir|alucin|psicomot|insight|conciencia de enfermedad)/))primary.push('Exploración psicopatológica');
+ else if(has(/(?:antecedent|diagnosticado previamente|ingresos previos|intentos previos|tratamiento habitual|medicacion habitual|toma\s+\w+.*\bmg\b|alergia|somatico|quirurg)/))primary.push('Antecedentes relevantes');
+ else if(has(/(?:acude por|consulta por|traid[oa] por|derivad[oa] por|motivo de consulta|ambulancia|policia)/) && index<=2)primary.push('Motivo de consulta');
+ else if(has(/(?:desde hace|desde ayer|desde hoy|ultimas horas|ultimos dias|empeoramiento|agudizacion|precipitante|desencaden|tras una discusion|actualmente|crisis)/))primary.push('Situación precipitante / enfermedad actual');
+
+ // Seguridad: riesgo puede coexistir con motivo/exploración sin perderse.
+ if(has(/suicid|autoles|heteroagres|arma|violenc|riesgo/) && primary[0]!=='Valoración de riesgos')extra.push('Valoración de riesgos');
+ return {primary:primary[0]||null,extra};
+}
+
+function typeOverride(type,s,index){
+ const n=norm(s),has=r=>r.test(n);
+ if(type==='emergency')return emergencyRoute(s,index);
+ if(type==='initial'){
+   if(has(/(?:vive|convive|pareja|hijos|trabaja|laboral|desemple|pension|autocuidado|avd|vivienda|ocupacional)/))return {primary:'Situación personal, social y funcional',extra:[]};
+   if(has(/(?:se inicia|iniciamos|se aumenta|aumentamos|se reduce|reducimos|se retira|retiramos|plan de tratamiento|se deriva|se recomienda)/))return {primary:'Plan de tratamiento e intervención',extra:[]};
+   if(has(/(?:toma|tratamiento actual|medicacion habitual|pauta habitual).*\b(?:mg|miligr)/))return {primary:'Tratamiento farmacológico previo / actual',extra:[]};
+   if(has(/(?:cita|seguimiento|revision|alta|ingreso|derivacion)/)&&!has(/ingresos previos/))return {primary:'Seguimiento / disposición',extra:[]};
+ }
+ if(type==='evolution'){
+   if(has(/(?:desde la ultima|ha mejorado|ha empeorado|persiste|evolucion|respuesta|se mantiene)/))return {primary:'Evolución desde la última revisión',extra:[]};
+   if(has(/(?:se inicia|se aumenta|se reduce|se retira|mantener tratamiento|ajustar tratamiento|plan de tratamiento)/))return {primary:'Plan de tratamiento',extra:[]};
+   if(has(/(?:adherencia|tolerancia|efectos secundarios|tratamiento actual|toma).*\b(?:mg|pauta)?/))return {primary:'Adherencia, tolerancia y tratamiento actual',extra:[]};
+ }
+ if(type==='discharge'){
+   if(has(/(?:se realizaron|se realizo|ajustes farmacolog|psicoeduc|intervencion realizada|coordinacion realizada)/))return {primary:'Intervenciones realizadas',extra:[]};
+   if(has(/(?:funcionalmente|autonom|avd|autocuidado|situacion funcional)/))return {primary:'Situación funcional al alta',extra:[]};
+   if(has(/(?:tratamiento al alta|pauta al alta|al alta se mantiene|al alta se pauta|mantener .*mg|retirar .*mg)/))return {primary:'Tratamiento al alta',extra:[]};
+   if(has(/(?:cita|seguimiento|derivacion|recurso|revision)/))return {primary:'Plan de seguimiento y recursos',extra:[]};
+ }
+ if(type==='pti'){
+   if(has(/(?:resumen clinico|esquizofrenia estabilizada|trastorno bipolar estabilizado)/))return {primary:'Resumen clínico y funcional',extra:[]};
+   if(has(/(?:necesidad|problema activo|dificultad|precisa|requiere)/))return {primary:'Necesidades / problemas activos',extra:[]};
+   if(has(/(?:objetivo|meta|se propone)/))return {primary:'Objetivos del ingreso',extra:[]};
+   if(has(/(?:indicador|asistencia|participacion|revision de objetivos)/))return {primary:'Indicadores de seguimiento y revisión',extra:[]};
+   if(has(/(?:psicolog|psicoterapia|dbt|mentaliz|mindfulness|act\b)/))return {primary:'Intervención de Psicología',extra:[]};
+   if(has(/(?:enfermer|educacion sanitaria|cuidados|adherencia)/))return {primary:'Intervención de Enfermería',extra:[]};
+   if(has(/(?:terapia ocupacional|avd|taller|rutina)/))return {primary:'Intervención de Terapia Ocupacional',extra:[]};
+   if(has(/(?:trabajo social|prestacion|vivienda|empleo|recurso residencial)/))return {primary:'Intervención de Trabajo Social',extra:[]};
+   if(has(/(?:farmaco|medicacion|pauta|psiquiatr)/))return {primary:'Intervención de Psiquiatría',extra:[]};
+ }
+ return {primary:null,extra:[]};
+}
+
+function chooseByScore(type,s,sections){
+ const priority=typePriority[type]||sections;let best=null,bestSc=0,second=0;
+ for(const sec of priority){if(!sections.includes(sec))continue;const sc=genericScore(sec,s);if(sc>bestSc){second=bestSc;bestSc=sc;best=sec}else if(sc>second)second=sc}
+ // Evita decidir por una palabra genérica aislada. Se exige margen o puntuación suficiente.
+ const confident=bestSc>=5 || (bestSc>=3 && bestSc-second>=2);
+ return {section:confident?best:null,score:bestSc,margin:bestSc-second};
+}
+
+function segment(text,type){
+ const sections=templates[type].sections;
+ const out=Object.fromEntries(sections.map(s=>[s,[]])),counts=Object.fromEntries(sections.map(s=>[s,0]));
+ const chunks=splitSpeechText(text);let active=null;const unassigned=[];
+ chunks.forEach((raw,i)=>{
+   const ex=explicitSection(raw,sections);
+   if(ex){active=ex.section;const cleaned=cleanClinicalFragment(ex.text);if(cleaned){out[active].push(cleaned);counts[active]++}return}
+   const cleaned=cleanClinicalFragment(raw);if(!cleaned)return;
+   const ov=typeOverride(type,cleaned,i);
+   let target=ov.primary;
+   if(!target){const ch=chooseByScore(type,cleaned,sections);target=ch.section}
+   // El encabezado activo ayuda solo si el fragmento es continuación breve; no "secuestra" toda la nota.
+   if(!target && active && raw.length<170){target=active}
+   if(target){out[target].push(cleaned);counts[target]++;active=target}else{unassigned.push(cleaned);active=null}
+   for(const x of (ov.extra||[])){if(sections.includes(x)&&x!==target){out[x].push(cleaned);counts[x]++}}
+ });
+ const report={};for(const s of sections)report[s]=uniq(out[s]).join(' ');
+ return {report,counts,total:chunks.length,unassigned:uniq(unassigned)};
+}
+
+let currentReport={}, currentCounts={}, currentUnassigned=[], lastInput='', currentType='initial';
+function reportText(){return template().sections.filter(s=>String(currentReport[s]||'').trim()).map(s=>`${s.toUpperCase()}\n${currentReport[s].trim()}`).join('\n\n')}
+function renderReport(){const t=template();$('#reportHeading').textContent=t.label;$('#reportSections').innerHTML=t.sections.map(sec=>{const v=currentReport[sec]||'';return `<div class="reportSection"><div class="reportHead"><div class="reportTitle">${esc(sec)}</div><div class="sourceCount">${currentCounts[sec]||0} fragmento(s)</div></div><div class="reportText ${v?'':'empty'}" contenteditable="true" data-sec="${esc(sec)}">${esc(v||'')}</div></div>`}).join('');
+ $$('.reportText').forEach(el=>{el.addEventListener('focus',()=>el.classList.remove('empty'));el.addEventListener('input',()=>{currentReport[el.dataset.sec]=el.innerText.trim()})});$('#reportCard').hidden=false;auditSegmentation();renderUnassigned();
+}
+function renderUnassigned(){const el=$('#unassignedReview');if(!currentUnassigned.length){el.innerHTML='';return}el.innerHTML=`<details><summary>⚠️ ${currentUnassigned.length} fragmento(s) sin asignar</summary><div class="detailBody"><div class="small">Se dejan fuera del informe para evitar volcarlos a un campo incorrecto. Puedes copiar el texto a la sección adecuada.</div>${currentUnassigned.map(x=>`<div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">${esc(x)}</div>`).join('')}</div></details>`}
+function auditSegmentation(){const vals=Object.entries(currentCounts).sort((a,b)=>b[1]-a[1]),assigned=Object.values(currentCounts).reduce((a,b)=>a+b,0),total=Math.max(assigned+currentUnassigned.length,1);if(total<4){$('#segmentationAudit').innerHTML='<div class="notice info">Segmentación corta: revisa los campos y edita lo necesario.</div>';return}const [top,n]=vals[0]||['',0],ratio=n/Math.max(assigned,1);if(ratio>=.68&&assigned>=4){$('#segmentationAudit').innerHTML=`<div class="notice warn">⚠️ Distribución concentrada: ${Math.round(ratio*100)}% de lo asignado ha quedado en “${esc(top)}”. El motor ya no fuerza los fragmentos dudosos: revisa especialmente ese campo.</div>`}else if(currentUnassigned.length){$('#segmentationAudit').innerHTML=`<div class="notice info">Campos distribuidos. ${currentUnassigned.length} fragmento(s) han quedado aparte por baja confianza.</div>`}else{$('#segmentationAudit').innerHTML='<div class="notice ok">✓ La información se ha distribuido entre campos clínicos específicos.</div>'}}
+function generate(){const text=$('#raw').value.trim();if(!text)return alert('Dicta o escribe primero la consulta.');lastInput=text;currentType=$('#visitType').value;const s=segment(text,currentType);currentReport=s.report;currentCounts=s.counts;currentUnassigned=s.unassigned||[];renderReport();detectMedsFromText(false);renderSuggestions();$('#reportCard').scrollIntoView({behavior:'smooth',block:'start'})}
+
+// ---- Dictado por pulsación: una sesión lógica, reinicios del navegador invisibles ----
+let recognition=null,dictationWanted=false,manualStop=false,restartTimer=null,dictationBase='',dictationCommitted='',cycleFinal='',cycleInterim='',fatalSpeechErrorShown=false;
+function SR(){return window.SpeechRecognition||window.webkitSpeechRecognition}
+function overlapAppend(base,add){base=String(base||'').trim();add=String(add||'').trim();if(!add)return base;if(!base)return add;const a=base.split(/\s+/),b=add.split(/\s+/);let max=Math.min(8,a.length,b.length),over=0;for(let k=max;k>=2;k--){if(norm(a.slice(-k).join(' '))===norm(b.slice(0,k).join(' '))){over=k;break}}return [base,b.slice(over).join(' ')].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()}
+function setDictationUI(state,msg){const b=$('#dictate');if(state){b.classList.add('listening');b.textContent='⏹️ Pulsar para detener';$('#dictationStatus').className='notice ok';$('#dictationStatus').textContent=msg||'Escuchando. La sesión continúa hasta que pulses detener; las pausas del navegador se enlazan sin crear una nota nueva.'}else{b.classList.remove('listening');b.textContent='🎙️ Pulsar para dictar';$('#dictationStatus').className='notice info';$('#dictationStatus').textContent=msg||'Una pulsación inicia y otra detiene. La transcripción se cierra solo al pulsar detener.'}}
+function displaySpeech(){const committed=[dictationBase,dictationCommitted].filter(Boolean).join(' ').trim();const temp=[cycleFinal,cycleInterim].filter(Boolean).join(' ').trim();$('#raw').value=overlapAppend(committed,temp)}
+function commitCycle(){const candidate=[cycleFinal,cycleInterim].filter(Boolean).join(' ').trim();if(candidate)dictationCommitted=overlapAppend(dictationCommitted,candidate);cycleFinal='';cycleInterim='';$('#raw').value=[dictationBase,dictationCommitted].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()}
+function startRecognitionCycle(){if(!dictationWanted)return;const C=SR();if(!C){dictationWanted=false;setDictationUI(false,'El reconocimiento web no está disponible. Usa el micrófono del teclado dentro del cuadro de texto.');$('#raw').focus();return}
+ clearTimeout(restartTimer);cycleFinal='';cycleInterim='';recognition=new C();recognition.lang='es-ES';recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;
+ recognition.onstart=()=>setDictationUI(true);
+ recognition.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i],tx=r[0].transcript.trim();if(!tx)continue;if(r.isFinal)cycleFinal=overlapAppend(cycleFinal,tx);else interim=overlapAppend(interim,tx)}cycleInterim=interim;displaySpeech()};
+ recognition.onerror=e=>{const err=e.error||'';if(err==='not-allowed'||err==='service-not-allowed'){dictationWanted=false;if(!fatalSpeechErrorShown){fatalSpeechErrorShown=true;alert('El navegador no ha autorizado el micrófono. Revisa el permiso del sitio/app.')}setDictationUI(false,'Micrófono no autorizado.')}else if(err==='audio-capture'){dictationWanted=false;setDictationUI(false,'No se detecta un micrófono disponible.')}};
+ recognition.onend=()=>{commitCycle();recognition=null;if(dictationWanted&&!manualStop){restartTimer=setTimeout(()=>{if(dictationWanted)startRecognitionCycle()},120)}else{manualStop=false;setDictationUI(false,'Dictado detenido por pulsación.')}};
+ try{recognition.start()}catch{recognition=null;if(dictationWanted)restartTimer=setTimeout(startRecognitionCycle,220)}
+}
+function toggleDictation(){if(dictationWanted){manualStop=true;dictationWanted=false;clearTimeout(restartTimer);try{recognition&&recognition.stop()}catch{}if(!recognition){commitCycle();setDictationUI(false,'Dictado detenido por pulsación.')}}else{manualStop=false;dictationWanted=true;fatalSpeechErrorShown=false;dictationBase=$('#raw').value.trim();dictationCommitted='';cycleFinal='';cycleInterim='';startRecognitionCycle()}}
+function stopDictation(){dictationWanted=false;manualStop=true;clearTimeout(restartTimer);try{recognition&&recognition.stop()}catch{}if(!recognition)commitCycle();recognition=null;setDictationUI(false)}
+
+// ---- Medicación: hasta cuatro cambios, pauta concreta ----
+const drugNames=['escitalopram','sertralina','fluoxetina','vortioxetina','venlafaxina','duloxetina','mirtazapina','trazodona','bupropion','lorazepam','clonazepam','diazepam','quetiapina','olanzapina','risperidona','aripiprazol','paliperidona','haloperidol','clozapina','lamotrigina','litio','valproato','carbamazepina','pregabalina','atomoxetina','metilfenidato','lisdexanfetamina','zolpidem'];
+function medSentences(text){return splitSpeechText(text).filter(s=>drugNames.some(d=>norm(s).includes(norm(d))));}
+function detectMedsFromText(show=true){const lines=medSentences($('#raw').value),found=[];for(const line of lines){for(const drug of drugNames){if(norm(line).includes(norm(drug))&&!found.some(x=>x.drug===drug))found.push({drug,line});if(found.length>=4)break}if(found.length>=4)break}if(!found.length){if(show)$('#medHint').textContent='No he detectado frases con fármacos en el dictado.';return}clearMeds();found.forEach((x,idx)=>{const i=idx+1;$('#medUse'+i).checked=true;$('#medName'+i).value=x.drug;$('#medPlan'+i).value=x.line;updateMedSlot(i)});$('#medHint').textContent=`Detectados ${found.length} fármaco(s). Revisa cada opción y deja dosis + distribución + cambio temporal si procede.`}
+function updateMedSlot(i){$('#medSlot'+i).classList.toggle('disabled',!$('#medUse'+i).checked)}
+function clearMeds(){for(let i=1;i<=4;i++){$('#medUse'+i).checked=false;$('#medName'+i).value='';$('#medPlan'+i).value='';updateMedSlot(i)}$('#medHint').textContent=''}
+function targetTreatmentSection(){const type=$('#visitType').value;return {initial:'Plan de tratamiento e intervención',evolution:'Plan de tratamiento',pti:'Intervención de Psiquiatría',discharge:'Tratamiento al alta',emergency:'Epicrisis y disposición'}[type]}
+function applyMeds(){if($('#reportCard').hidden)return alert('Primero ordena la nota.');const selected=[];for(let i=1;i<=4;i++){if(!$('#medUse'+i).checked)continue;const name=$('#medName'+i).value.trim(),plan=$('#medPlan'+i).value.trim();if(!name||!plan)return alert(`Completa fármaco y pauta concreta en la opción ${i}.`);selected.push(norm(plan).includes(norm(name))?plan:`${name.charAt(0).toUpperCase()+name.slice(1)} ${plan}`)}if(!selected.length)return alert('Selecciona al menos una pauta.');const sec=targetTreatmentSection();const title=$('#visitType').value==='emergency'?'Pauta indicada/confirmada':'Pauta farmacológica confirmada';const add=`${title}:\n${selected.map(x=>'• '+x).join('\n')}`;currentReport[sec]=[currentReport[sec],add].filter(Boolean).join('\n').trim();currentCounts[sec]=(currentCounts[sec]||0)+selected.length;renderReport();$('#medHint').textContent=`Añadidas ${selected.length} pauta(s) a “${sec}”.`}
+
+
+// ---- Copiloto clínico local: propuestas confirmables, nunca autoinsertadas ----
+let currentSuggestions=[];
+function addSuggestion(kind,title,text,target,source,med){
+ currentSuggestions.push({id:'s'+(currentSuggestions.length+1),kind,title,text,target,source,med});
+}
+function hasText(re){return re.test(norm($('#raw').value+' '+reportText()))}
+function sectionEmpty(name){return !String(currentReport[name]||'').trim()}
+function buildSuggestions(){
+ currentSuggestions=[]; const type=$('#visitType').value,n=norm($('#raw').value+' '+reportText());
+ // Calidad documental por plantilla
+ if(type==='emergency'){
+   if(/suicid|autoles|heteroagres|violenc|arma|impulsiv/.test(n)&&sectionEmpty('Valoración de riesgos'))
+     addSuggestion('field','Completar riesgo','El dictado contiene señales de riesgo, pero el campo de valoración de riesgos está vacío. Completar riesgo inmediato/basal, factores protectores y plan de seguridad si procede.','Valoración de riesgos','Plantilla de Urgencias / evaluación de seguridad');
+   if(/desorient|confus|fluctua|intoxic|primer episodio|inicio brusco|ancian|traumat|fiebre|neurolog/.test(n)&&sectionEmpty('Valoración médico-orgánica y pruebas complementarias'))
+     addSuggestion('field','Valorar causa orgánica','Por la presentación descrita, revisar constantes y exploración física y considerar pruebas dirigidas (p. ej., glucemia, tóxicos, analítica, ECG o neuroimagen) solo según clínica.','Valoración médico-orgánica y pruebas complementarias','Kaplan/Sadock + manuales de urgencias');
+   if(/alta a domicilio|se decide alta|ingreso|observacion|derivacion/.test(n)&&sectionEmpty('Epicrisis y disposición'))
+     addSuggestion('field','Documentar destino','Consta una decisión de destino; documentar de forma explícita alta/observación/ingreso/derivación y seguimiento inmediato.','Epicrisis y disposición','Plantilla de Urgencias');
+ }
+ // Monitorización farmacológica contextual
+ if(/clozapina/.test(n)) addSuggestion('field','Monitorización de clozapina','Revisar hemograma/ANC y monitorización específica vigente antes de confirmar cambios, además de efectos adversos e interacciones relevantes.',targetTreatmentSection(),'Stahl / Maudsley');
+ if(/litio/.test(n)) addSuggestion('field','Monitorización de litio','Revisar nivel plasmático cuando corresponda, función renal/tiroidea, calcio, hidratación e interacciones antes de confirmar un cambio.',targetTreatmentSection(),'Stahl / Maudsley');
+ if(/(?:haloperidol|ziprasidona|quetiapina|risperidona|citalopram)/.test(n)&&!/ecg|qtc|electrocard/.test(n))
+   addSuggestion('field','Revisar QTc si procede','Si existen factores de riesgo, dosis relevantes o combinaciones que prolonguen QT, considerar ECG/QTc y electrolitos antes o durante el ajuste.',$('#visitType').value==='emergency'?'Valoración médico-orgánica y pruebas complementarias':targetTreatmentSection(),'Stahl / Maudsley');
+ if(/benzodiazep|lorazepam|clonazepam|diazepam/.test(n)&&/opioid|morfina|oxicodona|fentanil|heroina/.test(n))
+   addSuggestion('field','Interacción depresora SNC','Revisar riesgo de sedación/depresión respiratoria por combinación de benzodiacepina y opioide y ajustar plan/monitorización si procede.',targetTreatmentSection(),'Stahl');
+ // Propuestas de tratamiento de baja inferencia: solo cuando el propio dictado ya nombra el fármaco sin pauta concreta.
+ const medlines=medSentences($('#raw').value);
+ for(const line of medlines){
+   for(const d of drugNames){if(norm(line).includes(norm(d)) && !/(?:\d+(?:[.,]\d+)?\s*mg|\d\s*-\s*\d\s*-\s*\d)/.test(norm(line))){
+     addSuggestion('med','Concretar pauta de '+d,`Se menciona ${d}, pero no detecto una pauta completa. Añádela solo tras fijar dosis, distribución, vía/duración o escalado si procede.`,targetTreatmentSection(),'Seguridad de prescripción', {name:d,plan:''});
+     break;
+   }}
+ }
+ return currentSuggestions;
+}
+function renderSuggestions(){
+ buildSuggestions(); const card=$('#suggestionCard'),list=$('#suggestionList');
+ if(!currentSuggestions.length){card.hidden=false;list.innerHTML='<div class="notice ok">No detecto huecos obvios con las reglas locales. La revisión clínica final sigue siendo necesaria.</div>';return}
+ card.hidden=false;list.innerHTML=currentSuggestions.map(s=>`<div class="suggestion" data-id="${s.id}"><b>${esc(s.title)}</b><div class="small" style="margin-top:4px">${esc(s.text)}</div><div class="source">Base: ${esc(s.source)}</div><div class="suggestionActions"><button class="secondary addSuggestion" data-id="${s.id}">＋ Añadir</button><button class="ghost dismissSuggestion" data-id="${s.id}">Descartar</button></div></div>`).join('');
+ $$('.addSuggestion').forEach(b=>b.addEventListener('click',()=>applySuggestion(b.dataset.id)));
+ $$('.dismissSuggestion').forEach(b=>b.addEventListener('click',()=>dismissSuggestion(b.dataset.id)));
+}
+function dismissSuggestion(id){currentSuggestions=currentSuggestions.filter(x=>x.id!==id);const el=document.querySelector(`.suggestion[data-id="${CSS.escape(id)}"]`);if(el)el.remove();if(!currentSuggestions.length)$('#suggestionList').innerHTML='<div class="small">Sugerencias revisadas.</div>'}
+function applySuggestion(id){
+ const s=currentSuggestions.find(x=>x.id===id); if(!s)return;
+ if(s.kind==='med'&&s.med){
+   let slot=0;for(let i=1;i<=4;i++){if(!$('#medUse'+i).checked){slot=i;break}}
+   if(!slot)return alert('Las cuatro líneas de cambios están ocupadas.');
+   $('#medUse'+slot).checked=true;$('#medName'+slot).value=s.med.name;$('#medPlan'+slot).value=s.med.plan;updateMedSlot(slot);$('#medPlan'+slot).focus();$('#medHint').textContent='Completa la pauta concreta y pulsa “Añadir pautas confirmadas”.';dismissSuggestion(id);return;
+ }
+ if($('#reportCard').hidden)return alert('Primero ordena la nota.');
+ const target=s.target;if(!target||!(target in currentReport))return alert('No encuentro el campo de destino en esta plantilla.');
+ const add='[REVISAR/CONFIRMAR] '+s.text;currentReport[target]=[currentReport[target],add].filter(Boolean).join('\n').trim();currentCounts[target]=(currentCounts[target]||0)+1;renderReport();dismissSuggestion(id);
+}
+
+// ---- Pacientes / mini historia ----
+const PATIENT_KEY='psikiaPatientsV3';
+function getCode(){return $('#patientCode').value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,8)}
+function patientStore(){try{return JSON.parse(localStorage.getItem(PATIENT_KEY)||'{}')}catch{return {}}}
+function savePatientStore(s){localStorage.setItem(PATIENT_KEY,JSON.stringify(s))}
+function deriveDx(){const typed=$('#diagnosis').value.trim();if(typed)return typed;const keys=['Juicio clínico / diagnóstico','Juicio clínico','Diagnóstico al alta'];for(const k of keys)if(currentReport[k])return currentReport[k].slice(0,180);return 'Sin diagnóstico consignado'}
+function makeEntrySummary(){const prefs=['Juicio clínico / diagnóstico','Juicio clínico','Diagnóstico al alta','Evolución desde la última revisión','Situación precipitante / enfermedad actual','Enfermedad actual / evolución longitudinal','Epicrisis','Epicrisis y disposición'];const p=[];prefs.forEach(k=>{if(currentReport[k])p.push(currentReport[k])});return (p.join(' ')||reportText()).slice(0,850)}
+function saveCurrentPatient(){const code=getCode();if(!code)return alert('Añade un código/inicial para guardar la mini historia.');if($('#reportCard').hidden)return alert('Primero ordena y revisa la nota.');const s=patientStore(),dx=deriveDx(),entry={date:new Date().toISOString(),type:$('#visitType').value,typeLabel:template().label,diagnosis:dx,summary:makeEntrySummary(),report:reportText()};const p=s[code]||{code,diagnoses:[],entries:[]};p.diagnoses=uniq([dx,...(p.diagnoses||[])]).slice(0,8);p.entries=[entry,...(p.entries||[])].slice(0,60);p.updated=entry.date;p.latestSummary=entry.summary;s[code]=p;savePatientStore(s);$('#saveHint').textContent=`Guardado en ${code}. La siguiente nota seguirá empezando vacía.`;updatePatientContext();renderPatients()}
+function updatePatientContext(){const code=getCode(),p=patientStore()[code];if(!code){$('#patientContext').textContent='Sin contexto longitudinal seleccionado.';return}if(!p){$('#patientContext').textContent=`${code}: paciente nuevo, sin entradas locales.`;return}const dx=(p.diagnoses||[]).slice(0,3).join(' · ');$('#patientContext').textContent=`${code} · ${(p.entries||[]).length} entrada(s)${dx?' · '+dx:''}\nÚltimo resumen: ${p.latestSummary||''}`}
+function renderPatients(){const filter=norm($('#patientFilter').value),s=patientStore();const arr=Object.values(s).sort((a,b)=>String(b.updated||'').localeCompare(String(a.updated||''))).filter(p=>!filter||norm(`${p.code} ${(p.diagnoses||[]).join(' ')} ${p.latestSummary||''}`).includes(filter));if(!arr.length){$('#patientList').innerHTML='<div class="card small">No hay pacientes guardados que coincidan.</div>';return}$('#patientList').innerHTML=arr.map(p=>`<div class="patientCard"><div class="patientTop"><div><div class="patientCode">${esc(p.code)}</div><div class="patientDx">${esc((p.diagnoses||[]).slice(0,3).join(' · ')||'Sin diagnóstico')}</div><div class="small" style="margin-top:4px">${esc(p.latestSummary||'')}</div></div><span class="badge">${(p.entries||[]).length} nota(s)</span></div><div class="patientActions"><button class="secondary openPatient" data-code="${esc(p.code)}">Abrir + nota nueva</button><button class="ghost toggleEntries" data-code="${esc(p.code)}">Ver historia</button></div><div id="entries-${esc(p.code)}" hidden>${(p.entries||[]).map(e=>`<div class="entry"><div class="entryMeta">${new Date(e.date).toLocaleString('es-ES')} · ${esc(e.typeLabel||e.type)}</div><div class="entrySummary"><b>${esc(e.diagnosis||'')}</b><br>${esc(e.summary||'')}</div><details><summary>Ver nota completa</summary><div class="detailBody">${esc(e.report||'')}</div></details></div>`).join('')}</div></div>`).join('');
+ $$('.openPatient').forEach(b=>b.addEventListener('click',()=>{const p=patientStore()[b.dataset.code];resetWorkingNote({keepPatient:false});$('#patientCode').value=b.dataset.code;$('#diagnosis').value=(p?.diagnoses||[])[0]||'';updatePatientContext();showTab('note')}));
+ $$('.toggleEntries').forEach(b=>b.addEventListener('click',()=>{const el=$('#entries-'+CSS.escape(b.dataset.code));el.hidden=!el.hidden;b.textContent=el.hidden?'Ver historia':'Ocultar historia'}));
+}
+
+// ---- Grupo compacto ----
+const groupCycles={
+ regulacion:{name:'Regulación emocional y habilidades',sessions:[
+  {title:'Detectar activación y bajar intensidad',concepts:'Señales corporales, escala 0–10, pausa y elección de respuesta.',exercise:'Cada participante identifica una señal precoz y ensaya una estrategia breve.'},
+  {title:'Asertividad sin escalada',concepts:'Petición clara, límite, validación y repetición serena.',exercise:'Role-play en parejas con una petición cotidiana.'},
+  {title:'Tolerancia al malestar',concepts:'Diferenciar resolver, aceptar temporalmente y pedir ayuda.',exercise:'Mapa de recursos personales para momentos 7–10/10.'}]},
+ act:{name:'ACT, valores y recuperación',sessions:[
+  {title:'Valores frente a objetivos',concepts:'Direcciones elegidas frente a metas concretas.',exercise:'Elegir un valor y una acción pequeña para esta semana.'},
+  {title:'Desfusión de pensamientos',concepts:'Observar un pensamiento sin tratarlo como una orden literal.',exercise:'“Estoy teniendo el pensamiento de que…” con ejemplos cotidianos.'},
+  {title:'Acción comprometida',concepts:'Pasos pequeños compatibles con valores aunque haya malestar.',exercise:'Plan de 10 minutos para una conducta evitada.'}]},
+ motivacional:{name:'Entrevista motivacional y hábitos',sessions:[
+  {title:'Ambivalencia y razones propias',concepts:'Explorar ventajas, costes y lenguaje de cambio sin confrontación.',exercise:'Balanza decisional y escala importancia/confianza 0–10.'},
+  {title:'Prepararse para un cambio pequeño',concepts:'Objetivo específico, barreras y plan B.',exercise:'Diseñar un cambio realizable durante 7 días.'}]}
+};
+function fillGroup(){const c=$('#groupCycle');c.innerHTML=Object.entries(groupCycles).map(([k,v])=>`<option value="${k}">${esc(v.name)}</option>`).join('');fillGroupSessions()}
+function fillGroupSessions(){const c=groupCycles[$('#groupCycle').value];$('#groupSession').innerHTML=c.sessions.map((s,i)=>`<option value="${i}">${esc(s.title)}</option>`).join('')}
+function groupHist(){try{return JSON.parse(localStorage.getItem('psikiaGroupHistoryV3')||'[]')}catch{return []}}
+function renderGroupHistory(){const h=groupHist();$('#groupHistory').innerHTML=h.length?h.map(x=>`<div class="groupHistoryItem"><div class="tiny">${new Date(x.date).toLocaleDateString('es-ES')} · ${esc(x.cycle)}</div><b>${esc(x.session)}</b>${x.feedback?`<div class="small">${esc(x.feedback)}</div>`:''}</div>`).join(''):'<div class="small">Todavía no hay sesiones guardadas.</div>'}
+function prepareGroup(){const c=groupCycles[$('#groupCycle').value],s=c.sessions[Number($('#groupSession').value)||0],fb=$('#groupFeedback').value.trim();const n=norm(fb),adapt=[];if(/silencio|poca particip|pasiv/.test(n))adapt.push('Empezar en parejas/tríadas antes de puesta en común.');if(/monopol|interrump/.test(n))adapt.push('Usar turnos breves de aproximadamente un minuto.');if(/dificultad|cognitiv|atencion/.test(n))adapt.push('Reducir explicación verbal y aumentar ejemplos/repetición.');$('#groupOutput').innerHTML=`<div class="groupSession"><b>${esc(s.title)}</b><p><b>Conceptos:</b> ${esc(s.concepts)}</p><p><b>Ejercicio:</b> ${esc(s.exercise)}</p>${adapt.length?`<p><b>Adaptación por feedback:</b> ${esc(adapt.join(' '))}</p>`:''}<button id="saveGroupNow" class="secondary">Guardar sesión</button></div>`;$('#saveGroupNow').addEventListener('click',()=>{const h=groupHist();h.unshift({date:new Date().toISOString(),cycle:c.name,session:s.title,feedback:fb.slice(0,500)});localStorage.setItem('psikiaGroupHistoryV3',JSON.stringify(h.slice(0,60)));renderGroupHistory();alert('Sesión guardada.')})}
+
+// ---- Nota nueva / no persistencia ----
+function resetWorkingNote(opts={keepPatient:true}){stopDictation();$('#raw').value='';lastInput='';currentReport={};currentCounts={};currentUnassigned=[];$('#reportCard').hidden=true;$('#reportSections').innerHTML='';$('#segmentationAudit').innerHTML='';$('#unassignedReview').innerHTML='';$('#saveHint').textContent='';$('#suggestionCard').hidden=true;currentSuggestions=[];clearMeds();if(!opts.keepPatient){$('#patientCode').value='';$('#diagnosis').value='';updatePatientContext()}window.scrollTo({top:0,behavior:'smooth'})}
+function showTab(name){$$('.tab').forEach(x=>x.classList.remove('active'));$$('nav button').forEach(x=>x.classList.remove('active'));$('#tab-'+name).classList.add('active');$(`nav button[data-tab="${name}"]`).classList.add('active');if(name==='patients')renderPatients()}
+
+// ---- Eventos ----
+$$('nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+$('#dictate').addEventListener('click',toggleDictation);$('#generate').addEventListener('click',generate);$('#resegment').addEventListener('click',generate);
+$('#clearRaw').addEventListener('click',()=>{$('#raw').value=''});$('#newNote').addEventListener('click',()=>resetWorkingNote({keepPatient:true}));$('#newNoteTop').addEventListener('click',()=>resetWorkingNote({keepPatient:true}));
+$('#copyRaw').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#raw').value)}catch{alert($('#raw').value)}});
+$('#copyReport').addEventListener('click',async()=>{const t=reportText();try{await navigator.clipboard.writeText(t);alert('Informe copiado.')}catch{alert(t)}});
+$('#savePatient').addEventListener('click',saveCurrentPatient);$('#patientCode').addEventListener('input',updatePatientContext);$('#openPatients').addEventListener('click',()=>showTab('patients'));$('#patientFilter').addEventListener('input',renderPatients);
+$('#visitType').addEventListener('change',()=>{if(!$('#reportCard').hidden){$('#saveHint').textContent='Has cambiado el contexto. Pulsa “Re-segmentar” para reconstruir los campos.'}});
+$('#refreshSuggestions').addEventListener('click',renderSuggestions);$('#clearSuggestions').addEventListener('click',()=>{$('#suggestionCard').hidden=true;currentSuggestions=[]});
+for(let i=1;i<=4;i++)$('#medUse'+i).addEventListener('change',()=>updateMedSlot(i));$('#detectMeds').addEventListener('click',()=>detectMedsFromText(true));$('#clearMeds').addEventListener('click',clearMeds);$('#applyMeds').addEventListener('click',applyMeds);
+$('#emailReport').addEventListener('click',()=>{const to=$('#emailAddress').value.trim();if(!to)return alert('Configura el correo profesional en Ajustes.');const body=encodeURIComponent(reportText()),subj=encodeURIComponent(`Psikia Hub · ${template().label}${getCode()?' · '+getCode():''}`);location.href=`mailto:${encodeURIComponent(to)}?subject=${subj}&body=${body}`});
+$('#groupCycle').addEventListener('change',fillGroupSessions);$('#prepareGroup').addEventListener('click',prepareGroup);$('#clearGroupHistory').addEventListener('click',()=>{if(confirm('¿Borrar todo el histórico grupal?')){localStorage.removeItem('psikiaGroupHistoryV3');renderGroupHistory()}});
+$('#saveSettings').addEventListener('click',()=>{localStorage.setItem('psikiaSettingsV3',JSON.stringify({email:$('#emailAddress').value.trim()}));alert('Ajustes guardados.')});
+$('#clearPatients').addEventListener('click',()=>{if(confirm('¿Borrar todas las mini historias locales de pacientes?')){localStorage.removeItem(PATIENT_KEY);updatePatientContext();renderPatients();alert('Mini historias borradas.')}});
+
+function loadSettings(){try{const s=JSON.parse(localStorage.getItem('psikiaSettingsV3')||'{}');if(s.email)$('#emailAddress').value=s.email}catch{}}
+function hardClearWorkingState(){stopDictation();$('#raw').value='';currentReport={};currentCounts={};currentUnassigned=[];lastInput='';$('#reportCard').hidden=true;$('#unassignedReview').innerHTML='';$('#suggestionCard').hidden=true;currentSuggestions=[];clearMeds()}
+window.addEventListener('pageshow',()=>{setTimeout(hardClearWorkingState,0);setTimeout(hardClearWorkingState,120)});
+window.addEventListener('pagehide',()=>{try{hardClearWorkingState()}catch{}});
+window.addEventListener('beforeunload',()=>{try{hardClearWorkingState()}catch{}});
+if('onfreeze' in document)document.addEventListener('freeze',()=>{try{hardClearWorkingState()}catch{}});
+let hiddenAt=0;document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=Date.now();if(dictationWanted)stopDictation()}else if(hiddenAt&&Date.now()-hiddenAt>120000){hardClearWorkingState();hiddenAt=0}});
+
+loadSettings();fillGroup();renderGroupHistory();renderPatients();updatePatientContext();clearMeds();setDictationUI(false);
+setTimeout(()=>{$('#raw').value=''},60);
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
 </body>
 </html>

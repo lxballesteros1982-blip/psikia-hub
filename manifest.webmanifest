@@ -1,11 +1,11 @@
 {
   "name":"Psikia Hub",
   "short_name":"Psikia Hub",
-  "description":"Asistente clínico y rehabilitador móvil para dictado, informes, psicoterapia y grupos.",
+  "description":"Asistente móvil para dictado clínico, informes, psicoterapia y terapia grupal.",
   "start_url":"./index.html",
   "scope":"./",
   "display":"standalone",
-  "background_color":"#081f4d",
+  "background_color":"#f4f7f9",
   "theme_color":"#173d5b",
   "lang":"es",
   "icons":[

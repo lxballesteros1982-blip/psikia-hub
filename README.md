@@ -1,14 +1,16 @@
-# Psikia Hub v1.2
+# Psikia Hub v2.0 beta
 
-Aplicación móvil local-first para dictado y estructuración de borradores clínicos, evolutivos, PTI, urgencias, altas, apoyo psicoterapéutico individual y terapia grupal TMG.
+Rediseño mobile-first inspirado en flujos de escriba clínico: sesión -> dictado -> nota estructurada -> revisión -> correo.
 
-Correo profesional predeterminado: Alejandro.ballesteros.prados@navarra.es
+## Cambios principales
+- Navegación reducida a Notas, Grupo y Ajustes.
+- Código local A/AB para continuidad entre primera valoración y seguimientos.
+- Tipos: primera consulta, seguimiento, agudos, UR valoración, UR seguimiento, PTI, alta y urgencias.
+- Orientación diagnóstica e intervención psicoterapéutica como desplegables opcionales debajo de la nota.
+- Pestaña Navarra eliminada; los recursos quedan como conocimiento contextual para futuros planes.
+- Grupo ampliado con conceptos, casos ficticios, preguntas abiertas, elección múltiple, diálogos terapeuta-paciente, pausas, dinámicas, tareas y modo pantalla/TV.
+- Histórico grupal agregado local.
+- Relajación muscular con lectura guiada mediante síntesis de voz del dispositivo cuando esté disponible.
 
-## Uso en móvil
-- La vía recomendada es servir esta carpeta por HTTPS e instalarla desde Chrome como PWA.
-- Para una prueba local, puede abrirse `index.html`; si el botón de voz del navegador no está disponible, usar el micrófono del teclado Android.
-- El correo se abre mediante `mailto:` en la aplicación de correo del dispositivo.
-- No incluye backend ni API comercial de pago.
-
-## Privacidad
-La app está diseñada para trabajar con contenido anonimizado/minimizado y guarda el contexto longitudinal e histórico grupal solo en almacenamiento local del navegador. Antes de un uso asistencial real, validar el mecanismo de dictado y el despliegue con las políticas de seguridad de la organización.
+## Actualización de la PWA instalada
+Subir los archivos de esta carpeta al mismo repositorio `psikia-hub`, sustituyendo los anteriores. GitHub Pages mantiene la misma URL. El service worker usa una caché nueva (`psikia-hub-v20`) y fuerza actualización de los archivos al volver a abrir la app con conexión.

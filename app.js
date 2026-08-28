@@ -22,6 +22,8 @@ const sections={
 };
 
 const cues={
+ 'Resumen clínico':['paciente con','en seguimiento','diagnost','tratamiento','ingresad','lleva','desde hace','centro de salud mental'],
+ 'Resumen clínico y funcional':['paciente con','en seguimiento','diagnost','tratamiento','ingresad','unidad de rehabilitacion','lleva ingresado','desde hace'],
  'Motivo de consulta / derivación':['motivo','derivad','primera cita','consulta por','remitid'],
  'Motivo de derivación / ingreso':['motivo','derivad','ingreso','unidad de rehabilitacion'],
  'Motivo de consulta':['motivo','acude','consulta por','derivad'],
@@ -67,31 +69,88 @@ function dedupe(arr){const seen=new Set();return arr.filter(x=>{const k=norm(x).
 function smartSegments(text){
  let s=String(text||'').replace(/\r/g,' ').replace(/\s+/g,' ').trim();if(!s)return [];
  const pivots=[
+  /\s+(?=(?:a\s+nivel\s+de\s+la\s+|en\s+la\s+)?exploraci[oó]n psicopatol[oó]gica\b)/ig,
   /\s+(?=(?:un\s+)?juicio(?:\s+cl[ií]nico)?\b)/ig,
   /\s+(?=(?:el\s+)?plan de tratamiento\b)/ig,
   /\s+(?=tratamiento actual\b)/ig,
   /\s+(?=enfermedad actual\b)/ig,
-  /\s+(?=exploraci[oó]n psicopatol[oó]gica\b)/ig,
   /\s+(?=motivo de (?:consulta|derivaci[oó]n)\b)/ig,
   /\s+(?=antecedentes (?:m[eé]dicos|psiqui[aá]tricos|familiares)\b)/ig,
   /\s+(?=consumo de sustancias\b)/ig,
   /\s+(?=(?:pr[oó]xima\s+)?cita\b)/ig,
-  /\s+(?=seguimiento\b)/ig
+  /\s+(?=seguimiento\b)/ig,
+  /\s+(?=en algunos momentos\b)/ig,
+  /\s+(?=por lo tanto\b)/ig,
+  /\s+(?=nos centramos\b)/ig,
+  /\s+(?=hacemos una intervenci[oó]n\b)/ig
  ];
  pivots.forEach(re=>{s=s.replace(re,' ||| ')});
  let chunks=s.split(/\s*\|\|\|\s*|\n+|(?<=[.!?;])\s+/).map(x=>x.trim()).filter(x=>x&&!/^(?:un|una|el|la)$/i.test(x)), out=[];
  for(const c of chunks){
-  if(c.split(/\s+/).length>34){
-   const subs=c.split(/\s+(?:y|pero|aunque)\s+(?=(?:actualmente|refiere|presenta|no presenta|no tiene|parece|se mantiene|hacemos|indicamos|retiramos|mantenemos|cita|juicio|plan)\b)/i).map(x=>x.trim()).filter(Boolean);
+  if(c.split(/\s+/).length>30){
+   const subs=c.split(/\s+(?:y|pero|aunque|por lo tanto)\s+(?=(?:actualmente|refiere|presenta|no presenta|no tiene|parece|se mantiene|hacemos|indicamos|retiramos|mantenemos|nos centramos|cita|juicio|plan|en algunos momentos)\b)/i).map(x=>x.trim()).filter(Boolean);
    out.push(...subs);
   }else out.push(c);
  }
  return out;
 }
+function sectionForHint(list,hint){
+ const patterns={
+  motive:/Motivo/i, medical:/Antecedentes médicos/i, psychHx:/Antecedentes psiquiátricos/i, family:/Antecedentes familiares/i,
+  substances:/Consumo de sustancias|consumo/i, social:/Situación sociolaboral|funcional/i, treatment:/Tratamiento actual/i,
+  illness:/Enfermedad actual|Evolución desde|Evolución clínica/i, mse:/Exploración psicopatológica/i, judgment:/Juicio clínico|Diagnóstico al alta/i,
+  plan:/Plan de tratamiento|Plan de intervención|Tratamiento \/ intervención|Intervención realizada|Intervención y seguimiento/i,
+  followup:/Seguimiento|Próxima cita|Próxima revisión|Disposición/i
+ };
+ return list.find(x=>patterns[hint]?.test(x))||null;
+}
+function hintedSegments(text,list){
+ let s=String(text||'').replace(/\r/g,' ').replace(/\s+/g,' ').trim();
+ const defs=[
+  ['mse',/\b(?:(?:a\s+nivel\s+de\s+la|en\s+la|a\s+la)\s+)?exploraci[oó]n psicopatol[oó]gica\b/ig],
+  ['judgment',/\bjuicio cl[ií]nico\b/ig],
+  ['plan',/\b(?:el\s+)?plan de tratamiento\b/ig],
+  ['treatment',/\btratamiento actual\b/ig],
+  ['illness',/\benfermedad actual\b/ig],
+  ['motive',/\bmotivo de (?:consulta|derivaci[oó]n|ingreso)\b/ig],
+  ['medical',/\bantecedentes m[eé]dicos(?: no psiqui[aá]tricos)?\b/ig],
+  ['psychHx',/\bantecedentes psiqui[aá]tricos(?: personales)?\b/ig],
+  ['family',/\bantecedentes familiares(?: psiqui[aá]tricos)?\b/ig],
+  ['substances',/\bconsumo de sustancias\b/ig],
+  ['followup',/\bpr[oó]xima cita\b/ig]
+ ];
+ for(const [key,re] of defs)s=s.replace(re,` |||@@${key}@@ `);
+ const raw=s.split(/\s*\|\|\|\s*/).map(x=>x.trim()).filter(Boolean), out=[];let forced=null, phase='preMse';
+ for(const part of raw){
+  const m=part.match(/^@@([a-zA-Z]+)@@\s*(.*)$/s);
+  if(m){
+   if(m[1]==='mse')phase='mse';else if(m[1]==='judgment')phase='judgment';else if(m[1]==='plan')phase='plan';
+   forced=sectionForHint(list,m[1]);if(m[2])out.push({text:m[2].trim(),forced,phase});continue
+  }
+  for(const seg of smartSegments(part))out.push({text:seg,forced,phase});
+ }
+ return out;
+}
 function classify(text, list){
  const out=Object.fromEntries(list.map(s=>[s,[]]));
- smartSegments(text).forEach(sent=>{let best=list[0],max=0;list.forEach(sec=>{const sc=score(sec,sent);if(sc>max){max=sc;best=sec}});if(max===0){best=list.find(x=>/Enfermedad|Evolución/.test(x))||list[0]}out[best].push(sent)});
- return Object.fromEntries(Object.entries(out).map(([k,v])=>[k,dedupe(v).join(' ')]));
+ hintedSegments(text,list).forEach(({text:sent,forced,phase})=>{
+  if(!sent||/^nota de evoluci[oó]n(?: cl[ií]nica)?[.:;]?$/i.test(sent.trim()))return;
+  if(forced){out[forced].push(sent);return}
+  let best=list[0],max=0;list.forEach(sec=>{const sc=score(sec,sent);if(sc>max){max=sc;best=sec}});
+  const evo=list.find(x=>/Evolución desde|Evolución clínica|Enfermedad actual/.test(x));
+  if(phase==='preMse'&&/Exploración psicopatológica/.test(best)&&evo)best=evo;
+  if(max===0)best=evo||list[0];
+  out[best].push(sent)
+ });
+ const joined=Object.fromEntries(Object.entries(out).map(([k,v])=>[k,dedupe(v).join(' ')]));
+ const planKey=list.find(k=>/Plan de tratamiento|Plan de intervención|Tratamiento \/ intervención|Intervención y seguimiento/.test(k));
+ const followKey=list.find(k=>/Próxima cita|Próxima revisión|Seguimiento$|Disposición/.test(k));
+ if(planKey&&followKey&&joined[planKey]){
+  const p=joined[planKey];
+  const m=p.match(/^(.*?)(\b(?:citarlo|citarla|citamos|damos cita|se programa cita|nueva revisi[oó]n|revisi[oó]n en)\b.*)$/i);
+  if(m&&m[2].split(/\s+/).length>=3){joined[planKey]=m[1].trim().replace(/[;,]+$/,'');joined[followKey]=[joined[followKey],m[2].trim()].filter(Boolean).join(' ')}
+ }
+ return joined;
 }
 
 function patientStore(){try{return JSON.parse(localStorage.getItem('psikiaPatientsV2')||'{}')}catch{return {}}}
@@ -102,7 +161,23 @@ function updateContextHint(){const code=getCode(), c=getContext(code);$('#patien
 
 function contextSummary(c){return c?.summary||''}
 function extractExplicitDiagnosis(text){const s=splitSentences(text).filter(x=>/juicio clinico|diagnostico|diagnóstico|compatible con/i.test(x));return s.join(' ')}
-function buildFollow(text,type){const base=classify(text,sections[type]);const c=getContext();if(type==='follow'){base['Resumen clínico']=contextSummary(c)||'Sin resumen previo guardado.'}else{base['Resumen clínico y funcional']=contextSummary(c)||'Sin resumen previo guardado.'}return base}
+function inferSummaryFromText(text,type){
+ const segs=smartSegments(text);const picked=[];
+ for(const s of segs){const n=norm(s);if(/exploracion psicopatologica|juicio clinico|plan de tratamiento/.test(n))break;if(/paciente con|en seguimiento|ingresad|tratamiento|diagnost|lleva .*semana|lleva .*mes/.test(n))picked.push(s);if(picked.join(' ').split(/\s+/).length>55)break}
+ return picked.join(' ').trim();
+}
+function inferVisitTypeFromText(text,selected){
+ const n=norm(text);
+ if(/plan de tratamiento individualizado|\bpti\b/.test(n))return 'pti';
+ if(/nota de evolucion|consulta de seguimiento|evolucion clinica/.test(n)){
+  if(/unidad de rehabilitacion|\bur\b|ingresad.*rehabilitacion/.test(n))return 'urFollow';
+  if(selected==='first')return 'follow';
+ }
+ if(/informe de alta|alta de la unidad/.test(n))return 'discharge';
+ if(/urgencias|atendido en urgencias/.test(n))return 'emergency';
+ return selected;
+}
+function buildFollow(text,type){const base=classify(text,sections[type]);const c=getContext();if(type==='follow'){base['Resumen clínico']=contextSummary(c)||base['Resumen clínico']||inferSummaryFromText(text,type)}else{base['Resumen clínico y funcional']=contextSummary(c)||base['Resumen clínico y funcional']||inferSummaryFromText(text,type)}return base}
 function buildPTI(text){const c=contextSummary(getContext()), n=norm(`${c} ${text}`), goals=[];
  if(/depres|hipotim|anhed|apat|abul/.test(n))goals.push('Mejorar la sintomatología afectiva y recuperar actividad gratificante.');
  if(/autocuidado|higiene|avd/.test(n))goals.push('Mejorar autonomía y regularidad en autocuidado y actividades de la vida diaria.');
@@ -217,14 +292,25 @@ function restoreDraft(){
 function clearDraft(){try{localStorage.removeItem(DRAFT_KEY)}catch{};setDictationStatus('Borrador nuevo. Guardado automático activo.')}
 async function acquireWakeLock(){if(!('wakeLock' in navigator)||wakeLock)return;try{wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}catch{}}
 async function releaseWakeLock(){if(wakeLock){try{await wakeLock.release()}catch{}wakeLock=null}}
-function appendRecognized(text){const t=String(text||'').trim();if(!t)return;$('#raw').value=($('#raw').value.trim()+($('#raw').value.trim()?' ':'')+t).trim();saveDraftNow('Fragmento guardado · seguimos escuchando…')}
+function mergeTranscript(existing,incoming){
+ const a=String(existing||'').trim(), b=String(incoming||'').trim();if(!b)return a;if(!a)return b;
+ const aw=a.split(/\s+/), bw=b.split(/\s+/), na=aw.map(norm), nb=bw.map(norm);
+ const tailNorm=norm(aw.slice(-45).join(' ')), bNorm=norm(b);
+ if(tailNorm.endsWith(bNorm)||norm(a).endsWith(bNorm))return a;
+ let best=0,max=Math.min(45,aw.length,bw.length);
+ for(let k=max;k>=1;k--){if(na.slice(-k).join(' ')===nb.slice(0,k).join(' ')){best=k;break}}
+ const novel=bw.slice(best).join(' ').trim();
+ if(!novel)return a;
+ return `${a} ${novel}`.replace(/\s+/g,' ').trim();
+}
+function appendRecognized(text){const t=String(text||'').trim();if(!t)return;$('#raw').value=mergeTranscript($('#raw').value,t);saveDraftNow('Fragmento definitivo guardado · seguimos escuchando…')}
 function stopDictation(message='Dictado detenido. El texto queda guardado.'){
  dictationWanted=false;isDictating=false;clearTimeout(restartTimer);if(recognition){try{recognition.stop()}catch{}recognition=null}releaseWakeLock();$('#dictate').textContent='🎙️ Dictar';setDictationStatus(message);saveDraftNow();
 }
 function startRecognitionLoop(){
  if(!dictationWanted||recognition)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){dictationWanted=false;$('#raw').focus();setDictationStatus('Usa el micrófono del teclado: este navegador no ofrece dictado web.');return}
- const r=new SR();recognition=r;r.lang='es-ES';r.continuous=true;r.interimResults=true;isDictating=true;$('#dictate').textContent='⏹️ Detener dictado';acquireWakeLock();setDictationStatus('🎙️ Escuchando · pantalla activa · guardado automático.');
- r.onresult=e=>{let finalText='',interim='';for(let i=e.resultIndex;i<e.results.length;i++){const tr=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=tr+' ';else interim+=tr+' '}if(finalText)appendRecognized(finalText);if(interim)setDictationStatus('🎙️ Escuchando: '+interim.trim().slice(-90))};
+ const r=new SR();recognition=r;r.lang='es-ES';r.continuous=true;r.interimResults=false;r.maxAlternatives=1;isDictating=true;$('#dictate').textContent='⏹️ Detener dictado';acquireWakeLock();setDictationStatus('🎙️ Escuchando · pantalla activa · guardado automático.');
+ r.onresult=e=>{let finalText='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalText+=e.results[i][0].transcript+' '}if(finalText)appendRecognized(finalText)};
  r.onerror=e=>{if(['not-allowed','service-not-allowed'].includes(e.error)){dictationWanted=false;setDictationStatus('Permiso de micrófono no disponible. Usa el micrófono del teclado.')}else if(e.error!=='aborted')setDictationStatus('El dictado se interrumpió; el texto reconocido sigue guardado.')};
  r.onend=()=>{if(recognition===r)recognition=null;isDictating=false;if(dictationWanted&&document.visibilityState==='visible'){restartTimer=setTimeout(startRecognitionLoop,300)}else{$('#dictate').textContent=dictationWanted?'🎙️ Reanudando…':'🎙️ Dictar';releaseWakeLock()}};
  try{r.start()}catch{recognition=null;restartTimer=setTimeout(startRecognitionLoop,500)}
@@ -295,7 +381,7 @@ function speak(text){if(!('speechSynthesis' in window))return alert('Este dispos
 // ---- EVENTS ----
 $$('nav button').forEach(b=>b.addEventListener('click',()=>{$$('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab').forEach(t=>t.classList.remove('active'));$(`#tab-${b.dataset.tab}`).classList.add('active')}));
 $('#patientCode').addEventListener('input',()=>{updateContextHint();scheduleDraftSave()});$('#visitType').addEventListener('change',scheduleDraftSave);$('#raw').addEventListener('input',scheduleDraftSave);$('#groupCycle').addEventListener('change',fillSessions);$('#groupGuidance').addEventListener('change',()=>{if(currentGroupSession)renderGroupSession()});
-$('#generate').addEventListener('click',()=>{if(dictationWanted)stopDictation('Dictado detenido para generar la nota. Todo el texto está guardado.');const text=$('#raw').value.trim();if(!text)return alert('Dicta o escribe primero la consulta.');lastInput=text;currentType=$('#visitType').value;saveDraftNow();fullReport=buildReport(text,currentType);compactMode=shouldCompact(text,currentType);currentReport=compactMode?compactReport(fullReport,currentType):{...fullReport};renderReport();$('#saveHint').textContent=getCode()?'Revisa la nota y guarda la evolución o envíala para actualizar el contexto local.':''});
+$('#generate').addEventListener('click',()=>{if(dictationWanted)stopDictation('Dictado detenido para generar la nota. Todo el texto está guardado.');const text=$('#raw').value.trim();if(!text)return alert('Dicta o escribe primero la consulta.');lastInput=text;const selected=$('#visitType').value;currentType=inferVisitTypeFromText(text,selected);if(currentType!==selected){$('#visitType').value=currentType;setDictationStatus(`Tipo de nota ajustado a ${labels[currentType]} por una indicación explícita del dictado.`)}saveDraftNow();fullReport=buildReport(text,currentType);compactMode=shouldCompact(text,currentType);currentReport=compactMode?compactReport(fullReport,currentType):{...fullReport};renderReport();$('#saveHint').textContent=getCode()?'Revisa la nota y guarda la evolución o envíala para actualizar el contexto local.':''});
 $('#clear').addEventListener('click',()=>{if(dictationWanted)stopDictation();$('#raw').value='';$('#resultCard').hidden=true;currentReport={};fullReport={};lastInput='';$('#saveHint').textContent='';clearDraft()});
 $('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(reportText());alert('Informe copiado.')}catch{alert('No se pudo copiar automáticamente. Mantén pulsado sobre el texto para copiarlo.')}});
 $('#saveContext').addEventListener('click',saveCurrentContext);

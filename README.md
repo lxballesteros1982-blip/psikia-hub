@@ -1,3 +1,15 @@
+# Psikia Hub v2.3 beta
+
+Actualización centrada en robustez del dictado y fidelidad clínica.
+
+## Cambios v2.3
+- El dictado web solo incorpora resultados definitivos; no concatena hipótesis parciales.
+- Fusión anti-duplicados para proteger frente a resultados acumulativos de Chrome/Android.
+- Conserva el autoguardado incremental y Wake Lock cuando está disponible.
+- Mejora la separación por marcadores explícitos (exploración psicopatológica, juicio clínico, plan de tratamiento, etc.).
+- Los evolutivos conservan el resumen dictado si no existe contexto previo.
+- La app no debe sustituir diagnósticos o medicamentos por inferencias silenciosas; el texto clínico original sigue siendo la referencia.
+
 # Psikia Hub v2.2 beta
 
 Rediseño mobile-first inspirado en flujos de escriba clínico: sesión -> dictado -> nota estructurada -> revisión -> correo.

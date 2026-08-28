@@ -1,4 +1,4 @@
-# Psikia Hub v2.0 beta
+# Psikia Hub v2.2 beta
 
 Rediseño mobile-first inspirado en flujos de escriba clínico: sesión -> dictado -> nota estructurada -> revisión -> correo.
 
@@ -14,3 +14,18 @@ Rediseño mobile-first inspirado en flujos de escriba clínico: sesión -> dicta
 
 ## Actualización de la PWA instalada
 Subir los archivos de esta carpeta al mismo repositorio `psikia-hub`, sustituyendo los anteriores. GitHub Pages mantiene la misma URL. El service worker usa una caché nueva (`psikia-hub-v20`) y fuerza actualización de los archivos al volver a abrir la app con conexión.
+
+
+## v2.2
+- Guardado incremental del dictado y recuperación de borrador.
+- Wake Lock durante el dictado cuando Android/Chrome lo permite.
+- Reanudación del reconocimiento si se interrumpe.
+- Clasificación clínica mejorada para dictados largos sin puntuación.
+- Solo se muestran de inicio los apartados con contenido; los vacíos quedan plegados.
+
+
+## Cambios v2.2
+- Formato breve/completo automático según tipo y extensión.
+- Botones + para incorporar orientación diagnóstica o psicoterapéutica al borrador final.
+- Envío por correo como texto en el cuerpo del mensaje.
+- Terapia grupal con modo muy guiado por defecto, sin necesidad de autorrevelación.

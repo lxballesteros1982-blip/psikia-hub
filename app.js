@@ -3,7 +3,9 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const splitSentences=text=>String(text||'').replace(/\r/g,'\n').split(/\n+|(?<=[.!?;])\s+/).map(x=>x.trim()).filter(Boolean);
-let currentReport={}, currentType='first', lastInput='', presentationSlides=[], slideIndex=0, currentGroupSession=null, recognition=null, isDictating=false;
+let currentReport={}, fullReport={}, currentType='first', lastInput='', presentationSlides=[], slideIndex=0, currentGroupSession=null, recognition=null, isDictating=false, compactMode=false;
+let wakeLock=null, dictationWanted=false, restartTimer=null, draftTimer=null;
+const DRAFT_KEY='psikiaHubDraftV21';
 
 const labels={
  first:'Primera consulta',follow:'Consulta de seguimiento',acute:'Consulta en agudos',urInitial:'UR · valoración/ingreso',urFollow:'UR · seguimiento',pti:'UR · PTI',discharge:'UR · alta',emergency:'Urgencias'
@@ -52,9 +54,45 @@ const cues={
  'Próxima revisión':['cita','revision','seguimiento','meses','semanas']
 };
 
-function score(section,s){const n=norm(s);return (cues[section]||[]).reduce((a,k)=>a+(n.includes(norm(k))?1:0),0)}
+function score(section,s){
+ const n=norm(s);let total=(cues[section]||[]).reduce((a,k)=>a+(n.includes(norm(k))?1:0),0), t=norm(section);
+ if(/juicio clinico/.test(t)&&/\bjuicio\b|diagnost|impresion clinica/.test(n))total+=6;
+ if(/plan de tratamiento|plan \/ seguimiento|plan de intervencion|tratamiento \/ intervencion/.test(t)&&/plan de tratamiento|\bplan\b|indicamos|mantenemos|retiramos|iniciamos|intervencion/.test(n))total+=4;
+ if(/exploracion psicopatologica/.test(t)&&/delir|alucin|autolit|suicid|orientad|discurso|afect|hipotim|eutim|planes de futuro|duerme|sueño|apetito|come bien/.test(n))total+=3;
+ if(/tratamiento actual/.test(t)&&/\bmg\b|miligr|escitalopram|fluoxetina|mirtazapina|lorazepam|sertralina|venlafaxina|duloxetina|vortioxetina|aripiprazol|olanzapina|risperidona|paliperidona|quetiapina|clozapina|litio|valproato|lamotrigina/.test(n))total+=3;
+ if(/seguimiento|proxima cita|proxima revision/.test(t)&&/cita|revision|seguimiento|dentro de \d+|en \d+ (?:mes|seman)/.test(n))total+=4;
+ return total;
+}
 function dedupe(arr){const seen=new Set();return arr.filter(x=>{const k=norm(x).replace(/[^a-z0-9]+/g,' ').trim();if(!k||seen.has(k))return false;seen.add(k);return true})}
-function classify(text, list){const out=Object.fromEntries(list.map(s=>[s,[]]));splitSentences(text).forEach(sent=>{let best=list[0],max=0;list.forEach(sec=>{const sc=score(sec,sent);if(sc>max){max=sc;best=sec}});if(max===0){best=list.find(x=>/Enfermedad|Evolución/.test(x))||list[0]}out[best].push(sent)});return Object.fromEntries(Object.entries(out).map(([k,v])=>[k,dedupe(v).join(' ')]))}
+function smartSegments(text){
+ let s=String(text||'').replace(/\r/g,' ').replace(/\s+/g,' ').trim();if(!s)return [];
+ const pivots=[
+  /\s+(?=(?:un\s+)?juicio(?:\s+cl[ií]nico)?\b)/ig,
+  /\s+(?=(?:el\s+)?plan de tratamiento\b)/ig,
+  /\s+(?=tratamiento actual\b)/ig,
+  /\s+(?=enfermedad actual\b)/ig,
+  /\s+(?=exploraci[oó]n psicopatol[oó]gica\b)/ig,
+  /\s+(?=motivo de (?:consulta|derivaci[oó]n)\b)/ig,
+  /\s+(?=antecedentes (?:m[eé]dicos|psiqui[aá]tricos|familiares)\b)/ig,
+  /\s+(?=consumo de sustancias\b)/ig,
+  /\s+(?=(?:pr[oó]xima\s+)?cita\b)/ig,
+  /\s+(?=seguimiento\b)/ig
+ ];
+ pivots.forEach(re=>{s=s.replace(re,' ||| ')});
+ let chunks=s.split(/\s*\|\|\|\s*|\n+|(?<=[.!?;])\s+/).map(x=>x.trim()).filter(x=>x&&!/^(?:un|una|el|la)$/i.test(x)), out=[];
+ for(const c of chunks){
+  if(c.split(/\s+/).length>34){
+   const subs=c.split(/\s+(?:y|pero|aunque)\s+(?=(?:actualmente|refiere|presenta|no presenta|no tiene|parece|se mantiene|hacemos|indicamos|retiramos|mantenemos|cita|juicio|plan)\b)/i).map(x=>x.trim()).filter(Boolean);
+   out.push(...subs);
+  }else out.push(c);
+ }
+ return out;
+}
+function classify(text, list){
+ const out=Object.fromEntries(list.map(s=>[s,[]]));
+ smartSegments(text).forEach(sent=>{let best=list[0],max=0;list.forEach(sec=>{const sc=score(sec,sent);if(sc>max){max=sc;best=sec}});if(max===0){best=list.find(x=>/Enfermedad|Evolución/.test(x))||list[0]}out[best].push(sent)});
+ return Object.fromEntries(Object.entries(out).map(([k,v])=>[k,dedupe(v).join(' ')]));
+}
 
 function patientStore(){try{return JSON.parse(localStorage.getItem('psikiaPatientsV2')||'{}')}catch{return {}}}
 function savePatientStore(obj){localStorage.setItem('psikiaPatientsV2',JSON.stringify(obj))}
@@ -89,12 +127,60 @@ function buildPTI(text){const c=contextSummary(getContext()), n=norm(`${c} ${tex
 }
 function buildDischarge(text){const out=classify(text,sections.discharge);const c=contextSummary(getContext());if(!out['Antecedentes relevantes'])out['Antecedentes relevantes']=c;if(!out['Motivo y contexto del ingreso'])out['Motivo y contexto del ingreso']=c;return out}
 function buildReport(text,type){if(['follow','urFollow'].includes(type))return buildFollow(text,type);if(type==='pti')return buildPTI(text);if(type==='discharge')return buildDischarge(text);return classify(text,sections[type]||sections.first)}
-
-function renderReport(){const list=sections[currentType]||Object.keys(currentReport);$('#reportHeading').textContent=labels[currentType]||'Nota clínica';$('#report').innerHTML=list.map(sec=>{const val=currentReport[sec]||'';return `<div class="reportSection"><div class="reportTitle">${esc(sec)}</div><div class="reportText ${val?'':'empty'}" contenteditable="true" data-sec="${esc(sec)}">${esc(val||'No consta / no referido')}</div></div>`}).join('');$$('.reportText').forEach(el=>el.addEventListener('input',()=>{currentReport[el.dataset.sec]=el.textContent.trim()}));
+function wordCount(text){return String(text||'').trim().split(/\s+/).filter(Boolean).length}
+function firstValue(rep,keys){for(const k of keys){if(String(rep[k]||'').trim())return rep[k]}return ''}
+function joinValues(rep,keys){return keys.map(k=>String(rep[k]||'').trim()).filter(Boolean).join(' ')}
+function shouldCompact(text,type){if(['follow','urFollow'].includes(type))return true;if(['pti','discharge','emergency','urInitial'].includes(type))return false;return wordCount(text)<=145}
+function compactReport(rep,type){
+ if(type==='follow')return {
+  'Descripción del caso':rep['Resumen clínico']||'',
+  'Evolución':rep['Evolución desde la última revisión']||'',
+  'Exploración psicopatológica':rep['Exploración psicopatológica comparativa']||'',
+  'Juicio clínico':rep['Juicio clínico']||'',
+  'Plan y seguimiento':joinValues(rep,['Plan de tratamiento','Próxima cita'])
+ };
+ if(type==='urFollow')return {
+  'Descripción del caso':rep['Resumen clínico y funcional']||'',
+  'Evolución clínica y funcional':joinValues(rep,['Evolución clínica','Evolución funcional / rehabilitadora']),
+  'Exploración psicopatológica':rep['Exploración psicopatológica comparativa']||'',
+  'Juicio clínico':rep['Juicio clínico']||'',
+  'Plan y seguimiento':joinValues(rep,['Plan de intervención','Próxima revisión'])
+ };
+ if(type==='first')return {
+  'Motivo de consulta / derivación':rep['Motivo de consulta / derivación']||'',
+  'Descripción del caso':joinValues(rep,['Antecedentes médicos no psiquiátricos','Antecedentes psiquiátricos personales','Antecedentes familiares psiquiátricos','Consumo de sustancias','Situación sociolaboral y funcional','Tratamiento actual']),
+  'Enfermedad actual / evolución':rep['Enfermedad actual / evolución longitudinal']||'',
+  'Exploración psicopatológica':rep['Exploración psicopatológica']||'',
+  'Juicio clínico':rep['Juicio clínico']||'',
+  'Plan y seguimiento':joinValues(rep,['Plan de tratamiento','Seguimiento'])
+ };
+ if(type==='acute')return {
+  'Motivo de consulta':rep['Motivo de consulta']||'',
+  'Descripción del caso':rep['Resumen de antecedentes relevantes']||'',
+  'Evolución / situación actual':rep['Enfermedad actual / situación precipitante']||'',
+  'Exploración psicopatológica':rep['Exploración psicopatológica']||'',
+  'Juicio clínico':rep['Juicio clínico']||'',
+  'Intervención y seguimiento':joinValues(rep,['Intervención realizada','Plan / seguimiento'])
+ };
+ return {...rep};
+}
+function reportSectionHtml(sec,val){return `<div class="reportSection"><div class="reportTitle">${esc(sec)}</div><div class="reportText ${val?'':'empty'}" contenteditable="true" data-sec="${esc(sec)}">${esc(val||'')}</div></div>`}
+function renderReport(){
+ const list=Object.keys(currentReport), filled=list.filter(sec=>String(currentReport[sec]||'').trim()), empty=list.filter(sec=>!String(currentReport[sec]||'').trim());
+ $('#reportHeading').textContent=labels[currentType]||'Nota clínica';
+ $('#formatBadge').textContent=compactMode?'Formato breve automático':'Formato completo automático';
+ $('#report').innerHTML=(filled.length?filled.map(sec=>reportSectionHtml(sec,currentReport[sec])).join(''):'<div class="small">No se ha podido asignar contenido todavía.</div>')+(empty.length?`<details class="emptySections"><summary>Apartados sin contenido (${empty.length})</summary><div class="detailBody">${empty.map(sec=>reportSectionHtml(sec,'')).join('')}</div></details>`:'');
+ $$('.reportText').forEach(el=>el.addEventListener('input',()=>{currentReport[el.dataset.sec]=el.textContent.trim();if(Object.prototype.hasOwnProperty.call(fullReport,el.dataset.sec))fullReport[el.dataset.sec]=currentReport[el.dataset.sec];el.classList.toggle('empty',!currentReport[el.dataset.sec])}));
  $('#diagnosticSuggestion').innerHTML=diagnosticHtml(lastInput,currentReport);$('#therapySuggestion').innerHTML=therapyHtml(`${lastInput} ${reportText()}`);$('#resultCard').hidden=false;$('#resultCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function reportText(){return Object.entries(currentReport).filter(([,v])=>String(v||'').trim()).map(([k,v])=>`${k.toUpperCase()}\n${String(v).trim()}`).join('\n\n')}
-function makeSummary(){const preferred=['Juicio clínico','Juicio clínico / diagnóstico','Tratamiento actual','Tratamiento al alta','Plan de tratamiento','Evolución clínica','Evolución desde la última revisión','Situación sociolaboral y funcional'];const parts=[];preferred.forEach(k=>{if(currentReport[k])parts.push(`${k}: ${currentReport[k]}`)});if(!parts.length)parts.push(reportText().slice(0,1600));return parts.join(' ')}
+function suggestionText(id){return [...document.querySelectorAll(`#${id} .suggestionBox`)].map(x=>x.innerText.trim()).filter(Boolean).join('\n')}
+function appendText(obj,key,prefix,text){if(!text)return false;const clean=String(text).replace(/\n+/g,' ').trim(), existing=String(obj[key]||'').trim();if(existing.includes(clean))return false;obj[key]=[existing,`${prefix}${clean}`].filter(Boolean).join(' ');return true}
+function diagnosticTarget(rep){return Object.keys(rep).find(k=>/Diagnóstico al alta|Juicio clínico|Diagnóstico/i.test(k))||'Juicio clínico'}
+function therapyTarget(rep){return Object.keys(rep).find(k=>/Intervención de Psicología|Plan de tratamiento e intervención|Plan de tratamiento|Plan de intervención|Tratamiento \/ intervención|Intervención realizada|Intervención y seguimiento|Plan y seguimiento/i.test(k))||'Plan de tratamiento'}
+function addDiagnosticToDocument(){const t=suggestionText('diagnosticSuggestion');if(!t)return alert('No hay orientación diagnóstica concreta para añadir.');const key=diagnosticTarget(fullReport);appendText(fullReport,key,'Orientación diagnóstica: ',t);currentReport=compactMode?compactReport(fullReport,currentType):{...fullReport};renderReport();$('#diagnosticDetails').open=true;$('#saveHint').textContent='Orientación diagnóstica añadida al borrador. Revísala antes de enviar.'}
+function addTherapyToDocument(){const t=suggestionText('therapySuggestion');if(!t)return alert('No hay intervención concreta para añadir.');const key=therapyTarget(fullReport);appendText(fullReport,key,'Intervención psicoterapéutica: ',t);currentReport=compactMode?compactReport(fullReport,currentType):{...fullReport};renderReport();$('#therapyDetails').open=true;$('#saveHint').textContent='Intervención psicoterapéutica añadida al borrador. Revísala antes de enviar.'}
+function makeSummary(){const source=Object.keys(fullReport).length?fullReport:currentReport;const preferred=['Juicio clínico','Juicio clínico / diagnóstico','Diagnóstico al alta','Tratamiento actual','Tratamiento al alta','Plan de tratamiento','Plan de intervención','Evolución clínica','Evolución desde la última revisión','Situación sociolaboral y funcional'];const parts=[];preferred.forEach(k=>{if(source[k])parts.push(`${k}: ${source[k]}`)});if(!parts.length)parts.push(reportText().slice(0,1600));return parts.join(' ')}
 function saveCurrentContext(){const code=getCode();if(!code)return $('#saveHint').textContent='Añade un código A/AB para guardar continuidad local.';const store=patientStore();store[code]={summary:makeSummary().slice(0,2200),updated:new Date().toISOString(),type:currentType};savePatientStore(store);updateContextHint();$('#saveHint').textContent=`Contexto de ${code} guardado localmente.`}
 
 function diagnosticHtml(text,rep){const explicit=extractExplicitDiagnosis(text);const n=norm(`${text} ${reportText()}`);let lines=[];
@@ -119,6 +205,32 @@ function therapyHtml(text){const n=norm(text), ideas=[];
  return ideas.slice(0,4).map(([t,d])=>`<div class="suggestionBox"><strong>${esc(t)}</strong><br>${esc(d)}</div>`).join('');
 }
 
+
+function setDictationStatus(msg){const el=$('#dictationStatus');if(el)el.textContent=msg}
+function saveDraftNow(msg){
+ try{localStorage.setItem(DRAFT_KEY,JSON.stringify({raw:$('#raw').value,code:getCode(),type:$('#visitType').value,updated:new Date().toISOString()}));if(msg)setDictationStatus(msg)}catch{}
+}
+function scheduleDraftSave(){clearTimeout(draftTimer);draftTimer=setTimeout(()=>saveDraftNow('Borrador guardado automáticamente.'),180)}
+function restoreDraft(){
+ try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(!d||!d.raw)return;const age=Date.now()-new Date(d.updated).getTime();if(age>7*24*3600*1000)return;$('#raw').value=d.raw||'';if(d.code)$('#patientCode').value=d.code;if(d.type&&labels[d.type])$('#visitType').value=d.type;setDictationStatus('Borrador recuperado automáticamente. Puedes continuar dictando.')}catch{}
+}
+function clearDraft(){try{localStorage.removeItem(DRAFT_KEY)}catch{};setDictationStatus('Borrador nuevo. Guardado automático activo.')}
+async function acquireWakeLock(){if(!('wakeLock' in navigator)||wakeLock)return;try{wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}catch{}}
+async function releaseWakeLock(){if(wakeLock){try{await wakeLock.release()}catch{}wakeLock=null}}
+function appendRecognized(text){const t=String(text||'').trim();if(!t)return;$('#raw').value=($('#raw').value.trim()+($('#raw').value.trim()?' ':'')+t).trim();saveDraftNow('Fragmento guardado · seguimos escuchando…')}
+function stopDictation(message='Dictado detenido. El texto queda guardado.'){
+ dictationWanted=false;isDictating=false;clearTimeout(restartTimer);if(recognition){try{recognition.stop()}catch{}recognition=null}releaseWakeLock();$('#dictate').textContent='🎙️ Dictar';setDictationStatus(message);saveDraftNow();
+}
+function startRecognitionLoop(){
+ if(!dictationWanted||recognition)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){dictationWanted=false;$('#raw').focus();setDictationStatus('Usa el micrófono del teclado: este navegador no ofrece dictado web.');return}
+ const r=new SR();recognition=r;r.lang='es-ES';r.continuous=true;r.interimResults=true;isDictating=true;$('#dictate').textContent='⏹️ Detener dictado';acquireWakeLock();setDictationStatus('🎙️ Escuchando · pantalla activa · guardado automático.');
+ r.onresult=e=>{let finalText='',interim='';for(let i=e.resultIndex;i<e.results.length;i++){const tr=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=tr+' ';else interim+=tr+' '}if(finalText)appendRecognized(finalText);if(interim)setDictationStatus('🎙️ Escuchando: '+interim.trim().slice(-90))};
+ r.onerror=e=>{if(['not-allowed','service-not-allowed'].includes(e.error)){dictationWanted=false;setDictationStatus('Permiso de micrófono no disponible. Usa el micrófono del teclado.')}else if(e.error!=='aborted')setDictationStatus('El dictado se interrumpió; el texto reconocido sigue guardado.')};
+ r.onend=()=>{if(recognition===r)recognition=null;isDictating=false;if(dictationWanted&&document.visibilityState==='visible'){restartTimer=setTimeout(startRecognitionLoop,300)}else{$('#dictate').textContent=dictationWanted?'🎙️ Reanudando…':'🎙️ Dictar';releaseWakeLock()}};
+ try{r.start()}catch{recognition=null;restartTimer=setTimeout(startRecognitionLoop,500)}
+}
+function toggleDictation(){if(dictationWanted){stopDictation();return}dictationWanted=true;startRecognitionLoop()}
+
 // ---- GROUPS ----
 const groupCycles={
  assert:{name:'Asertividad y habilidades sociales',sessions:[
@@ -134,7 +246,7 @@ const groupCycles={
   {title:'4. Críticas, desacuerdo y límites',duration:'65 min',concepts:[['Crítica útil','Se centra en una conducta concreta y su impacto.'],['Descalificación','Convierte una conducta en una etiqueta global sobre la persona.']],caseTitle:'Caso: una reunión tensa',caseText:'Durante una reunión, una compañera dice: “Tu propuesta no tiene sentido”. Elena siente vergüenza y responde: “Pues la tuya es peor”. La discusión se personaliza.',open:['¿Qué opciones existen entre callarse y contraatacar?','¿Cómo pedir que la crítica sea más concreta?'],quiz:{q:'Una respuesta posible sería:',options:['“Cállate, tú no tienes ni idea.”','“Vale, tienes razón en todo.”','“No estoy de acuerdo. Si ves un problema concreto en la propuesta, dime cuál y lo revisamos.”','Irse sin decir nada.'],correct:2,why:'Marca desacuerdo y devuelve la conversación a conductas o argumentos concretos.'},dialogue:[['Terapeuta','¿Qué fue lo que más te activó?'],['Paciente','Que pareciera que soy incompetente.'],['Terapeuta','¿Podemos responder a la frase concreta sin defender toda tu identidad?']],pause:['¿Qué cambia al separar conducta de identidad?'],exercise:'Role-play de crítica: recibir una crítica, pedir concreción, decidir qué parte se acepta y qué parte se rechaza.',materials:['Tarjetas de críticas leves/moderadas'],task:'Practicar una frase para pedir concreción ante una crítica.',slides:['Crítica ≠ identidad','Pedir concreción','Aceptar una parte','Discrepar sin atacar','Role-play']}
  ]},
  values:{name:'Valores, emoción y decisiones',sessions:[
-  {title:'1. Qué me importa y cómo se nota',duration:'65 min',concepts:[['Valor','Dirección que orienta elecciones y conductas; no es una meta que se “termina”.'],['Meta','Resultado concreto que puede alcanzarse o completarse.']],caseTitle:'Dinámica de valores',caseText:'Cada persona elegirá cinco valores de una lista y después reducirá la selección a tres. No hay una respuesta correcta: el objetivo es observar qué prioriza cada uno y cómo cambia según la situación.',open:['¿Qué valor elegirías si solo pudieras conservar tres?','¿Qué conducta de esta semana demostraría ese valor?','¿Hay valores importantes que ahora mismo estés descuidando?'],values:['Familia','Amistad','Salud','Humor','Solidaridad','Autonomía','Aprendizaje','Creatividad','Honestidad','Seguridad','Aventura','Responsabilidad','Cuidado','Justicia','Trabajo','Espiritualidad','Curiosidad','Lealtad','Descanso','Contribución'],quiz:{q:'¿Cuál de estas opciones describe mejor un valor?',options:['“Perder 5 kg.”','“Ser una persona que cuida su salud.”','“Conseguir un contrato indefinido.”','“Terminar un curso.”'],correct:1,why:'Cuidar la salud es una dirección continua; las otras opciones son metas concretas.'},dialogue:[['Terapeuta','Dices que la familia es muy importante. ¿Cómo se vería ese valor esta semana?'],['Paciente','Podría llamar a mi hermano.'],['Terapeuta','Eso convierte un valor abstracto en una conducta concreta.']],pause:['¿Qué diferencia hay entre decir “la familia me importa” y actuar en esa dirección?'],exercise:'Selección 5→3 valores. Después, cada participante escribe una conducta pequeña que represente uno de ellos. Puesta en común voluntaria.',materials:['Lista de 20 valores','Papel y bolígrafo'],task:'Realizar una conducta pequeña alineada con uno de los tres valores elegidos.',slides:['Valores: direcciones, no metas','Elige 5','Ahora elige 3','¿Cómo se ve un valor en la conducta?','Compromiso pequeño']},
+  {title:'1. Qué me importa y cómo se nota',duration:'65 min',concepts:[['Valor','Dirección que orienta elecciones y conductas; no es una meta que se “termina”.'],['Meta','Resultado concreto que puede alcanzarse o completarse.']],caseTitle:'Dinámica de valores',caseText:'Cada persona elegirá cinco valores de una lista y después reducirá la selección a tres. No hay una respuesta correcta: el objetivo es observar qué prioriza cada uno y cómo cambia según la situación.',open:['¿Qué valor elegirías si solo pudieras conservar tres?','¿Qué conducta de esta semana demostraría ese valor?','¿Hay valores importantes que ahora mismo estés descuidando?'],values:['Familia','Amistad','Salud','Humor','Solidaridad','Autonomía','Aprendizaje','Creatividad','Honestidad','Seguridad','Aventura','Responsabilidad','Cuidado','Justicia','Trabajo','Espiritualidad','Curiosidad','Lealtad','Descanso','Contribución'],quiz:{q:'¿Cuál de estas opciones describe mejor un valor?',options:['“Perder 5 kg.”','“Ser una persona que cuida su salud.”','“Conseguir un contrato indefinido.”','“Terminar un curso.”'],correct:1,why:'Cuidar la salud es una dirección continua; las otras opciones son metas concretas.'},dialogue:[['Terapeuta','Dices que la familia es muy importante. ¿Cómo se vería ese valor esta semana?'],['Paciente','Podría llamar a mi hermano.'],['Terapeuta','Eso convierte un valor abstracto en una conducta concreta.']],pause:['¿Qué diferencia hay entre decir “la familia me importa” y actuar en esa dirección?'],guidedExercise:'Versión cerrada sin autorrevelación: presenta a Ana, que debe elegir entre acompañar a un familiar a una cita importante y cumplir un compromiso previo con un amigo. Reparte tres tarjetas —Familia, Lealtad, Responsabilidad— y pide al grupo elegir cuál parece priorizar Ana en cada una de tres decisiones ficticias. Después pregunta: “¿Puede haber dos respuestas razonables si cambian los valores priorizados?”.',exercise:'Selección 5→3 valores. Después, cada participante escribe una conducta pequeña que represente uno de ellos. Puesta en común voluntaria.',materials:['Lista de 20 valores','Papel y bolígrafo'],task:'Realizar una conducta pequeña alineada con uno de los tres valores elegidos.',slides:['Valores: direcciones, no metas','Elige 5','Ahora elige 3','¿Cómo se ve un valor en la conducta?','Compromiso pequeño']},
   {title:'2. Cuando dos valores chocan',duration:'70 min',concepts:[['Conflicto de valores','Dos direcciones importantes pueden competir; decidir implica priorizar temporalmente sin negar la importancia de la otra.']],caseTitle:'Caso: ayudar a un amigo o proteger mis límites',caseText:'Un amigo pide que canceles un plan familiar importante para ayudarle con una mudanza de última hora. Para ti son importantes la lealtad y la familia. No puedes hacer ambas cosas al mismo tiempo.',open:['¿Qué consejo le darías a un amigo en esta situación?','¿Qué te aconsejarías a ti mismo?','¿Sale el mismo consejo? ¿Por qué?','¿Qué valor estás priorizando y qué coste aceptas?'],quiz:{q:'¿Qué respuesta refleja mejor un conflicto de valores?',options:['“Si elijo una cosa significa que la otra no me importa.”','“Puedo valorar ambas cosas y aun así priorizar una hoy.”','“Siempre debo escoger a los demás antes que a mí.”','“Los valores sirven para evitar decisiones difíciles.”'],correct:1,why:'Priorizar en una situación concreta no elimina el valor de la alternativa.'},dialogue:[['Terapeuta','¿Qué le dirías a tu mejor amigo si estuviera en tu situación?'],['Paciente','Que mantenga el plan con su familia y ayude otro día.'],['Terapeuta','¿Y a ti qué te dices?'],['Paciente','Que si no voy soy mala persona.'],['Terapeuta','Ahí aparece una regla distinta para ti que para los demás.']],pause:['¿Somos más exigentes con nosotros que con un amigo?','¿Qué valor o miedo explica esa diferencia?'],exercise:'En parejas: cada persona recibe un dilema con dos valores en conflicto. Primero aconseja a “un amigo”; después responde qué haría ella misma. Comparar diferencias.',materials:['Tarjetas con 6 dilemas de valores','Lista de valores'],task:'Ante una decisión real, escribir: valores implicados, prioridad actual y coste que acepto.',slides:['Dos valores pueden chocar','Dilema: amigo vs familia','¿Qué aconsejarías a un amigo?','¿Qué te aconsejas a ti?','Elegir también implica aceptar un coste']},
   {title:'3. Emoción, pensamiento y conducta',duration:'60 min',concepts:[['Emoción','Respuesta afectiva con cambios subjetivos y corporales.'],['Pensamiento','Interpretación, imagen o evaluación que aparece ante una situación.'],['Conducta','Lo que hacemos o dejamos de hacer en respuesta a la situación.']],caseTitle:'Caso: mensaje sin respuesta',caseText:'Envías un mensaje importante y pasan seis horas sin respuesta. Piensas “está enfadado conmigo”, notas ansiedad y decides enviar cinco mensajes más.',open:['¿Qué es situación, qué es pensamiento, qué es emoción y qué es conducta?','¿Qué otras interpretaciones son posibles?','¿Qué cambia si la conducta es esperar una hora antes de actuar?'],quiz:{q:'“Seguro que no me responde porque ya no le importo” es principalmente:',options:['Una emoción','Un pensamiento/interpretación','Una conducta','Un hecho objetivo'],correct:1,why:'Es una interpretación sobre la situación, no un hecho comprobado.'},dialogue:[['Terapeuta','¿Qué sabes con certeza?'],['Paciente','Solo que no ha respondido.'],['Terapeuta','¿Y qué has añadido tú?'],['Paciente','Que está enfadado y que no le importo.']],pause:['¿Cómo cambia la emoción cuando distinguimos dato de interpretación?'],exercise:'Clasificar tarjetas en situación / pensamiento / emoción / conducta y después construir cadenas alternativas.',materials:['Tarjetas de ejemplos'],task:'Registrar una cadena breve situación–pensamiento–emoción–conducta.',slides:['Cuatro piezas','Situación','Pensamiento','Emoción','Conducta','Cambiar un eslabón']}
  ]},
@@ -153,17 +265,18 @@ const groupCycles={
 
 function fillCycles(){const cycle=$('#groupCycle');cycle.innerHTML=Object.entries(groupCycles).map(([k,v])=>`<option value="${k}">${esc(v.name)}</option>`).join('');fillSessions()}
 function fillSessions(){const c=groupCycles[$('#groupCycle').value];$('#groupSession').innerHTML=c.sessions.map((s,i)=>`<option value="${i}">${esc(s.title)}</option>`).join('')}
-function adaptGroup(feedback){const n=norm(feedback), tips=[];if(/poco dinam|poca particip|silencio|pasiv/.test(n))tips.push('Empezar el ejercicio en parejas/tríadas antes de pedir puesta en común abierta.');if(/monopol|interrump|hablan mucho|desbord/.test(n))tips.push('Usar turnos breves y limitar intervenciones a aproximadamente un minuto.');if(/dificultad.*compr|atencion|cognitiv/.test(n))tips.push('Reducir explicación verbal y aumentar ejemplos, tarjetas y repetición.');if(/conflict|tension/.test(n))tips.push('Recordar reglas de hablar desde la propia experiencia y evitar interpretar a otros miembros.');return tips}
-function renderGroupSession(){const cycle=groupCycles[$('#groupCycle').value], idx=Number($('#groupSession').value)||0, s=cycle.sessions[idx];currentGroupSession=s;const adapt=adaptGroup($('#groupFeedback').value);presentationSlides=s.slides||[s.title,...s.open];slideIndex=0;
+function adaptGroup(feedback){const n=norm(feedback), tips=[];if(/poco dinam|poca particip|silencio|pasiv/.test(n))tips.push('Mantener formato cerrado: votación, elección A/B/C/D y ensayo con frases ya preparadas; no pedir experiencias personales.');if(/monopol|interrump|hablan mucho|desbord/.test(n))tips.push('Usar turnos breves y limitar intervenciones a aproximadamente un minuto.');if(/dificultad.*compr|atencion|cognitiv/.test(n))tips.push('Reducir explicación verbal y aumentar ejemplos, tarjetas y repetición.');if(/conflict|tension/.test(n))tips.push('Trabajar sobre personajes ficticios y evitar interpretar a miembros del grupo.');return tips}
+function guidedScriptHtml(s){return `<div class="guidedScript"><b>Guion cerrado de conducción</b><div class="guidedStep exactPhrase">“Hoy vamos a trabajar con un caso ficticio. No hace falta contar nada personal. Primero escuchamos, después elegimos entre varias opciones y al final practicamos una respuesta concreta.”</div><div class="guidedStep"><b>1.</b> Lee el caso completo sin interrumpirlo y pide solo una votación rápida: “¿Qué opción encaja mejor: A, B, C o D?”</div><div class="guidedStep"><b>2.</b> Lee las cuatro respuestas de la pregunta de elección. Pide levantar uno, dos, tres o cuatro dedos. No solicites justificación todavía.</div><div class="guidedStep"><b>3.</b> Da la explicación preparada: ${esc(s.quiz?.why||'Revisar juntos por qué una opción encaja mejor que las demás.')}</div><div class="guidedStep"><b>4.</b> Haz el diálogo terapeuta–paciente exactamente como está escrito, repartiendo los dos papeles entre terapeuta y un voluntario o leyéndolo tú mismo.</div><div class="guidedStep"><b>5.</b> Ejecuta la dinámica concreta con instrucciones breves y tiempo limitado. Si nadie quiere participar, usa dos personajes ficticios y pide al grupo que elija cuál de dos respuestas sería más útil.</div><div class="guidedStep exactPhrase">Cierre: “No buscamos contar intimidades. La idea de hoy es llevarnos una herramienta y reconocer cuándo podría ser útil.”</div></div>`}
+function renderGroupSession(){const cycle=groupCycles[$('#groupCycle').value], idx=Number($('#groupSession').value)||0, s=cycle.sessions[idx];currentGroupSession=s;const adapt=adaptGroup($('#groupFeedback').value);const guided=$('#groupGuidance').value==='guided';presentationSlides=s.slides||[s.title,...s.open];slideIndex=0;
  const concepts=(s.concepts||[]).map(([a,b])=>`<div class="concept"><b>${esc(a)}</b><div class="small">${esc(b)}</div></div>`).join('');
  const dialogue=(s.dialogue||[]).map(([who,t])=>`<div class="turn"><span class="${who==='Terapeuta'?'therapist':'patient'}">${esc(who)}:</span> ${esc(t)}</div>`).join('');
  const values=s.values?`<div class="values">${s.values.map(v=>`<span class="valueChip">${esc(v)}</span>`).join('')}</div>`:'';
  $('#groupOutput').innerHTML=`<div class="groupSession"><div class="groupHero"><div class="eyebrow">${esc(cycle.name)}</div><h2>${esc(s.title)}</h2><div class="small">Duración orientativa: ${esc(s.duration||'60 min')}</div></div><div class="groupBody">
- <h3>1 · Conceptos para abrir la sesión</h3><div class="conceptGrid">${concepts}</div>${values}
- <h3>2 · Relato / caso para trabajar</h3><div class="case"><b>${esc(s.caseTitle)}</b><br>${esc(s.caseText)}</div><ul class="questions">${(s.open||[]).map(q=>`<li>${esc(q)}</li>`).join('')}</ul>
+ ${guided?guidedScriptHtml(s):''}<h3>1 · Conceptos para abrir la sesión</h3><div class="conceptGrid">${concepts}</div>${values}
+ <h3>2 · Relato / caso para trabajar</h3><div class="case"><b>${esc(s.caseTitle)}</b><br>${esc(s.caseText)}</div>${guided?`<details><summary>Preguntas abiertas opcionales</summary><div class="detailBody"><ul class="questions">${(s.open||[]).map(q=>`<li>${esc(q)}</li>`).join('')}</ul></div></details>`:`<ul class="questions">${(s.open||[]).map(q=>`<li>${esc(q)}</li>`).join('')}</ul>`}
  <h3>3 · Pregunta de elección al grupo</h3><div><b>${esc(s.quiz.q)}</b></div><div class="mcq">${s.quiz.options.map((o,i)=>`<button type="button" data-q="${i}">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('')}</div><div id="quizFeedback" class="feedback">Pulsa una opción para mostrar la explicación.</div>
  <h3>4 · Diálogo terapeuta–paciente</h3><div class="dialogue">${dialogue}</div>${(s.pause||[]).map(q=>`<div class="pause">⏸️ <b>Pausa al grupo:</b> ${esc(q)}</div>`).join('')}
- <h3>5 · Dinámica concreta</h3><div class="case">${esc(s.exercise)}</div><b>Material</b><ul class="materials">${(s.materials||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+ <h3>5 · Dinámica concreta</h3><div class="case">${esc(guided&&s.guidedExercise?s.guidedExercise:s.exercise)}</div><b>Material</b><ul class="materials">${(s.materials||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
  ${adapt.length?`<h3>Adaptación al grupo</h3><ul class="questions">${adapt.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
  <h3>6 · Cierre / tarea</h3><div class="suggestionBox">${esc(s.task)}</div>
  <div class="actions"><button id="presentGroup">📺 Modo pantalla</button>${s.audio?'<button id="speakGroup" class="secondary">▶️ Leer práctica</button>':''}<button id="saveGroup" class="ghost">Guardar sesión</button></div>
@@ -181,15 +294,17 @@ function speak(text){if(!('speechSynthesis' in window))return alert('Este dispos
 
 // ---- EVENTS ----
 $$('nav button').forEach(b=>b.addEventListener('click',()=>{$$('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab').forEach(t=>t.classList.remove('active'));$(`#tab-${b.dataset.tab}`).classList.add('active')}));
-$('#patientCode').addEventListener('input',updateContextHint);$('#groupCycle').addEventListener('change',fillSessions);
-$('#generate').addEventListener('click',()=>{const text=$('#raw').value.trim();if(!text)return alert('Dicta o escribe primero la consulta.');lastInput=text;currentType=$('#visitType').value;currentReport=buildReport(text,currentType);renderReport();$('#saveHint').textContent=getCode()?'Revisa la nota y guarda la evolución o envíala para actualizar el contexto local.':''});
-$('#clear').addEventListener('click',()=>{$('#raw').value='';$('#resultCard').hidden=true;currentReport={};lastInput='';$('#saveHint').textContent=''});
+$('#patientCode').addEventListener('input',()=>{updateContextHint();scheduleDraftSave()});$('#visitType').addEventListener('change',scheduleDraftSave);$('#raw').addEventListener('input',scheduleDraftSave);$('#groupCycle').addEventListener('change',fillSessions);$('#groupGuidance').addEventListener('change',()=>{if(currentGroupSession)renderGroupSession()});
+$('#generate').addEventListener('click',()=>{if(dictationWanted)stopDictation('Dictado detenido para generar la nota. Todo el texto está guardado.');const text=$('#raw').value.trim();if(!text)return alert('Dicta o escribe primero la consulta.');lastInput=text;currentType=$('#visitType').value;saveDraftNow();fullReport=buildReport(text,currentType);compactMode=shouldCompact(text,currentType);currentReport=compactMode?compactReport(fullReport,currentType):{...fullReport};renderReport();$('#saveHint').textContent=getCode()?'Revisa la nota y guarda la evolución o envíala para actualizar el contexto local.':''});
+$('#clear').addEventListener('click',()=>{if(dictationWanted)stopDictation();$('#raw').value='';$('#resultCard').hidden=true;currentReport={};fullReport={};lastInput='';$('#saveHint').textContent='';clearDraft()});
 $('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(reportText());alert('Informe copiado.')}catch{alert('No se pudo copiar automáticamente. Mantén pulsado sobre el texto para copiarlo.')}});
 $('#saveContext').addEventListener('click',saveCurrentContext);
 $('#email').addEventListener('click',()=>{const to=$('#emailAddress').value.trim();if(!to)return alert('Configura el correo profesional en Ajustes.');if(getCode())saveCurrentContext();const subject=encodeURIComponent(`Psikia Hub · ${labels[currentType]}${getCode()?` · ${getCode()}`:''}`);const body=encodeURIComponent(reportText());location.href=`mailto:${encodeURIComponent(to)}?subject=${subject}&body=${body}`});
-$('#dictate').addEventListener('click',()=>{if(isDictating&&recognition){recognition.stop();return}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('#raw').focus();alert('El dictado web no está disponible aquí. Usa el micrófono del teclado del móvil dentro del cuadro de texto.');return}recognition=new SR();recognition.lang='es-ES';recognition.continuous=true;recognition.interimResults=false;isDictating=true;$('#dictate').textContent='⏹️ Detener dictado';recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript+' ';$('#raw').value=($('#raw').value+' '+t).trim()};recognition.onend=()=>{isDictating=false;recognition=null;$('#dictate').textContent='🎙️ Dictar'};recognition.onerror=()=>{isDictating=false;recognition=null;$('#dictate').textContent='🎙️ Dictar'};recognition.start()});
+$('#dictate').addEventListener('click',toggleDictation);$('#addDiagnostic').addEventListener('click',addDiagnosticToDocument);$('#addTherapy').addEventListener('click',addTherapyToDocument);
 $('#prepareGroup').addEventListener('click',renderGroupSession);$('#clearGroupHistory').addEventListener('click',()=>{if(confirm('¿Borrar el histórico grupal local?')){localStorage.removeItem('psikiaGroupHistoryV2');renderGroupHistory()}});
 $('#clearPatients').addEventListener('click',()=>{if(confirm('¿Borrar todos los contextos locales A/AB?')){localStorage.removeItem('psikiaPatientsV2');updateContextHint();alert('Contextos locales borrados.')}});
 $('#prevSlide').addEventListener('click',()=>{slideIndex=(slideIndex-1+presentationSlides.length)%presentationSlides.length;renderSlide()});$('#nextSlide').addEventListener('click',()=>{slideIndex=(slideIndex+1)%presentationSlides.length;renderSlide()});$('#closePresentation').addEventListener('click',closePresentation);
 
-fillCycles();renderGroupHistory();updateContextHint();
+document.addEventListener('visibilitychange',()=>{saveDraftNow();if(document.visibilityState==='visible'&&dictationWanted&&!recognition){acquireWakeLock();startRecognitionLoop()}});
+window.addEventListener('pagehide',()=>saveDraftNow());
+restoreDraft();fillCycles();renderGroupHistory();updateContextHint();if(!$('#raw').value)setDictationStatus('Guardado automático activo. Durante el dictado intentaremos mantener la pantalla encendida.');

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173d5b">
+  <meta name="description" content="Psikia Hub: asistente clínico y rehabilitador móvil para dictado, informes, psicoterapia y grupos.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <title>Psikia Hub</title>
+  <style>
+    :root{--bg:#f4f7f9;--card:#fff;--ink:#16232d;--muted:#657583;--primary:#173d5b;--primary2:#245f7f;--soft:#eaf2f7;--line:#d7e1e7;--ok:#207355;--warn:#986400;--danger:#a13b3b}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:14px 15px;box-shadow:0 2px 12px #0002}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:10px}.brandwrap{display:flex;align-items:center;gap:10px;min-width:0}.brandicon{width:38px;height:38px;border-radius:11px;flex:none}.brand{font-weight:850;font-size:20px}.sub{font-size:11px;opacity:.85;margin-top:2px}.shield{font-size:11px;padding:6px 9px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff18;white-space:nowrap}
+    main{max-width:900px;margin:auto;padding:12px 11px 138px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:11px;box-shadow:0 3px 12px #1231}
+    h2{font-size:17px;margin:0 0 9px}h3{font-size:14px;color:var(--primary);margin:14px 0 7px}p{line-height:1.43}.small{font-size:12px;color:var(--muted);line-height:1.4}
+    label{display:block;font-size:12px;font-weight:750;color:#344b5c;margin:10px 0 5px}input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid #c8d5dc;border-radius:10px;padding:10px}textarea{min-height:170px;resize:vertical;line-height:1.45}.shortta{min-height:100px}
+    button{border:0;border-radius:10px;padding:10px 12px;min-height:42px;font-weight:760;font-size:14px;background:var(--primary);color:#fff;cursor:pointer}button.secondary{background:var(--soft);border:1px solid #cadde7;color:var(--primary)}button.danger{background:#fff0f0;border:1px solid #efcaca;color:var(--danger)}button:disabled{opacity:.5;cursor:not-allowed}
+    .row{display:flex;gap:7px;flex-wrap:wrap}.row>button{flex:1;min-width:125px}.notice{border-left:4px solid var(--primary2);border-radius:9px;padding:9px 10px;background:#eef7fb;font-size:12px;line-height:1.42}.notice.ok{border-left-color:var(--ok);background:#edf8f3}.notice.warn{border-left-color:var(--warn);background:#fff7e7}.notice.danger{border-left-color:var(--danger);background:#fff0f0}
+    .chips{display:flex;gap:6px;flex-wrap:wrap}.chip,.badge{display:inline-block;border-radius:999px;padding:4px 7px;font-size:11px;background:var(--soft);color:var(--primary);border:1px solid #d0e0e9}.badge{margin-left:4px}.badge.evidence{background:#edf8f3;color:#206b4f}.badge.formulation{background:#fff7e7;color:#805700}
+    section.tab{display:none}section.tab.active{display:block}.sectionbox{border:1px solid var(--line);border-radius:11px;padding:10px;margin:8px 0;background:#fbfcfd}.sectiontitle{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase;letter-spacing:.02em;margin-bottom:5px}.sectiontext{font-size:14px;line-height:1.45;white-space:pre-wrap;min-height:28px;outline:none}.sectiontext:focus{box-shadow:0 0 0 2px #b9d5e4;border-radius:6px}
+    .therapy-card{border:1px solid var(--line);border-radius:13px;padding:11px;margin:9px 0;background:#fcfdfe}.therapy-card h4{font-size:14px;color:var(--primary);margin:0 0 5px}.therapy-card .why{font-size:12px;color:var(--muted);margin-bottom:7px}.steps{margin:6px 0 5px;padding-left:20px;font-size:13px;line-height:1.45}.therapy-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.therapy-actions button{padding:7px 9px;min-height:36px;font-size:12px}.source{border-top:1px solid var(--line);margin-top:8px;padding-top:7px;font-size:11px;color:var(--muted)}.source a{color:var(--primary);font-weight:700;text-decoration:none}
+    .suggestion{border:1px solid var(--line);border-radius:11px;padding:9px;margin:7px 0;font-size:13px}.suggestion strong{color:var(--primary)}
+    .group-plan{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fbfcfd;margin-top:9px}.group-plan h3{margin-top:0}.group-block{border-top:1px solid var(--line);padding-top:9px;margin-top:9px}.group-block:first-of-type{border-top:0;padding-top:0}.group-history-item{border:1px solid var(--line);border-radius:11px;padding:10px;margin:7px 0;background:#fcfdfe}.group-history-item .meta{font-size:11px;color:var(--muted);margin-bottom:5px}.session-pill{display:inline-block;padding:4px 7px;border:1px solid #d0e0e9;border-radius:999px;background:var(--soft);font-size:11px;color:var(--primary);margin:2px 3px 2px 0}.group-output{white-space:pre-wrap;font-size:13px;line-height:1.48}.compact-select{min-height:44px}
+    .context-preview{white-space:pre-wrap;border:1px dashed #bfcfd8;border-radius:10px;padding:9px;background:#fafcfd;font-size:12px;max-height:170px;overflow:auto}.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0}.switch input{width:auto;transform:scale(1.2)}
+    nav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}nav button{background:transparent;color:#5a6a76;padding:5px 1px;min-height:51px;font-size:10px;border-radius:8px}nav button.active{background:var(--soft);color:var(--primary)}nav .ico{display:block;font-size:18px;margin-bottom:2px}
+    details{border:1px solid var(--line);border-radius:10px;padding:8px 9px;margin:7px 0;background:#fcfdfe}summary{font-size:12px;font-weight:800;color:var(--primary);cursor:pointer}.footer{font-size:10px;color:var(--muted);text-align:center;margin-top:16px}
+    @media(min-width:700px){main{padding:16px 16px 94px}nav{grid-template-columns:repeat(7,1fr)}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.therapy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.therapy-card{margin:0}}
+  </style>
+</head>
+<body>
+<header><div class="head"><div><div class="brandwrap"><img class="brandicon" src="icon-192.png" alt=""><div><div class="brand">Psikia Hub</div><div class="sub">Asistente clínico y rehabilitador</div></div></div><div class="shield">🔒 Local-first</div></div></header>
+<main>
+  <section id="tab-dictado" class="tab active">
+    <div class="card">
+      <h2>Nueva nota clínica</h2>
+      <div class="notice ok"><b>Flujo principal:</b> dictar → ordenar → revisar → enviar al correo profesional. La estructuración funciona localmente y no requiere API de pago.</div>
+      <div class="two">
+        <div><label for="setting">Ámbito</label><select id="setting"><option>Unidad de Rehabilitación</option><option>Consultas externas / CSM</option><option>Urgencias</option></select></div>
+        <div><label for="tipo">Tipo de documento</label><select id="tipo"><option value="initial">Valoración inicial / ingreso</option><option value="evolution">Evolutivo / seguimiento</option><option value="pti">Plan de Tratamiento Individualizado (PTI)</option><option value="discharge">Informe de alta</option><option value="emergency">Urgencias / valoración única</option></select></div>
+      </div>
+      <label for="raw">Dictado o notas desordenadas</label>
+      <textarea id="raw" placeholder="Dicta como lo harías normalmente. Psikia Hub intentará colocar la información por apartados y conservar la cronología."></textarea>
+      <div id="privacyResult" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:9px"><button id="dictate">🎙️ Dictar</button><button id="analyze" class="secondary">🧠 Ordenar informe</button><button id="clear" class="danger">Borrar</button></div>
+      <p class="small">El reconocimiento de voz web puede usar servicios del navegador/dispositivo. Para actividad asistencial real, utiliza únicamente un mecanismo de dictado autorizado por tu organización. La app no graba audio: convierte voz a texto mientras dictas.</p>
+    </div>
+    <div class="card">
+      <h2>Contexto longitudinal</h2>
+      <p class="small">En evolutivos, PTI y altas puede reutilizar un resumen previamente validado para evitar redictar antecedentes y tratamiento.</p>
+      <div id="contextPreview" class="context-preview">No hay contexto longitudinal guardado.</div>
+      <div class="row" style="margin-top:8px"><button id="saveContext" class="secondary">Guardar informe actual como contexto</button><button id="clearContext" class="danger">Eliminar contexto</button></div>
+      <p class="small">Se guarda solo en este dispositivo. No incluyas identificadores directos.</p>
+    </div>
+    <div class="card">
+      <h2>Minimización de datos</h2>
+      <div class="chips"><span class="chip">Sin nombre</span><span class="chip">Sin DNI/NIE</span><span class="chip">Sin teléfono/email</span><span class="chip">Sin dirección</span><span class="chip">Sin NHC</span><span class="chip">Evitar localidad/centro identificable</span></div>
+      <div class="switch"><span class="small">Bloquear estructuración/envío ante identificadores obvios</span><input id="blockOnIdentifiers" type="checkbox" checked></div>
+    </div>
+  </section>
+
+  <section id="tab-informe" class="tab">
+    <div class="card">
+      <h2>Borrador estructurado</h2>
+      <div id="reportSections"><p class="small">Aún no hay informe.</p></div>
+      <div class="row" style="margin-top:9px"><button id="copyReport">Copiar</button><button id="shareReport" class="secondary">Compartir</button><button id="emailReport" class="secondary">✉️ Enviar por correo</button></div>
+      <div class="notice warn" style="margin-top:9px">Revisar siempre antes de incorporar a la historia clínica. El diagnóstico, el tratamiento y el contenido final son responsabilidad del profesional.</div>
+    </div>
+  </section>
+
+  <section id="tab-psicoterapia" class="tab">
+    <div class="card">
+      <h2>Sugerencias psicoterapéuticas</h2>
+      <div class="notice">Se generan a partir del evolutivo/nota clínica ya anonimizada. Están pensadas para <b>la siguiente sesión</b> y no se insertan automáticamente en la historia.</div>
+      <div id="therapySummary" class="small" style="margin-top:9px">Ordena una nota para generar propuestas.</div>
+      <div id="therapyCards" class="therapy-grid" style="margin-top:9px"></div>
+    </div>
+    <div class="card">
+      <h2>Biblioteca de técnicas</h2>
+      <label for="therapyFilter">Buscar técnica o problema</label><input id="therapyFilter" placeholder="pánico, psicosis, asertividad, sueño, cannabis, límites…">
+      <div id="therapyLibrary" style="margin-top:8px"></div>
+      <p class="small">Los resúmenes son originales de Psikia Hub. No se redistribuye el texto íntegro de libros con copyright. Si aportas material que tengas derecho a usar, podremos añadir índices/notas locales.</p>
+    </div>
+  </section>
+
+  <section id="tab-grupo" class="tab">
+    <div class="card">
+      <h2>Terapia grupal TMG</h2>
+      <div class="notice ok"><b>Grupo rehabilitador:</b> planificación de sesiones psicoeducativas y psicoterapéuticas breves para pacientes estabilizados o parcialmente estabilizados. El histórico guarda únicamente observaciones globales del grupo, sin iniciales ni fichas individuales.</div>
+      <div class="two">
+        <div><label for="groupCycle">Ciclo / temática</label><select id="groupCycle" class="compact-select"></select></div>
+        <div><label for="groupSession">Sesión</label><select id="groupSession" class="compact-select"></select></div>
+      </div>
+      <label for="groupTone">Contexto del grupo para adaptar la sesión (opcional)</label>
+      <textarea id="groupTone" class="shortta" placeholder="Ej.: grupo poco participativo; las últimas sesiones funcionaron mejor con ejercicios por parejas; surgieron dificultades generales para decir no en el trabajo. No incluir iniciales, edades exactas, profesión/localidad singular ni datos que permitan reconocer a nadie."></textarea>
+      <div id="groupPrivacy" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:9px"><button id="buildGroupSession">🧩 Preparar sesión</button><button id="randomGroupSession" class="secondary">🎲 Proponer siguiente</button></div>
+      <p class="small">La propuesta es un guion de apoyo al profesional, no un protocolo rígido. En psicosis, bipolaridad, TLP u otras condiciones, aplicar solo técnicas para las que exista competencia y supervisión adecuada.</p>
+    </div>
+    <div class="card">
+      <h2>Guion de la sesión</h2>
+      <div id="groupPlan"><p class="small">Selecciona un ciclo y prepara la sesión.</p></div>
+      <div class="row" style="margin-top:9px"><button id="copyGroupPlan" class="secondary">Copiar guion</button></div>
+    </div>
+    <div class="card">
+      <h2>Feedback tras la sesión</h2>
+      <label for="groupFeedback">Resumen global</label>
+      <textarea id="groupFeedback" class="shortta" placeholder="Ej.: participación baja al inicio y mejor tras role-play; el grupo identificó bien estilos pasivo/agresivo/asertivo; conviene repetir práctica de petición y negativa. Sin datos individuales identificables."></textarea>
+      <div id="groupFeedbackPrivacy" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:9px"><button id="saveGroupFeedback">Guardar en histórico local</button><button id="clearGroupFeedback" class="secondary">Limpiar</button></div>
+      <p class="small">Este histórico pretende recordar qué se ha trabajado y cómo respondió el grupo como conjunto. No usar para seguimiento individual.</p>
+    </div>
+    <div class="card">
+      <h2>Histórico del grupo</h2>
+      <div id="groupHistory"><p class="small">Todavía no hay sesiones guardadas.</p></div>
+      <div class="row" style="margin-top:9px"><button id="copyGroupHistory" class="secondary">Copiar histórico</button><button id="clearGroupHistory" class="danger">Borrar histórico</button></div>
+    </div>
+  </section>
+
+  <section id="tab-sugerencias" class="tab">
+    <div class="card">
+      <h2>Control clínico</h2>
+      <div class="notice warn">Apoyo a la decisión. No sustituye DSM/CIE, guías ni juicio clínico.</div>
+      <h3>Diagnóstico / CIE orientativo</h3><div id="diagnosisSuggestions"><p class="small">Ordena una nota para generar sugerencias.</p></div>
+      <h3>Medicaciones detectadas</h3><div id="medSuggestions"><p class="small">Sin datos.</p></div>
+      <h3>Datos a revisar</h3><div id="missingSuggestions"><p class="small">Sin datos.</p></div>
+    </div>
+  </section>
+
+  <section id="tab-recursos" class="tab">
+    <div class="card"><h2>Recursos y orientación rehabilitadora</h2><div id="resources"></div></div>
+  </section>
+
+  <section id="tab-ajustes" class="tab">
+    <div class="card">
+      <h2>Correo profesional</h2>
+      <label for="email">Destinatario</label><input id="email" type="email" value="Alejandro.ballesteros.prados@navarra.es" autocomplete="off">
+      <label for="subjectPrefix">Asunto</label><input id="subjectPrefix" value="Borrador clínico Psikia Hub">
+      <button id="saveSettingsBtn" style="margin-top:9px">Guardar en este dispositivo</button>
+      <p class="small">“Enviar por correo” abre el cliente de correo configurado en el móvil con destinatario, asunto y borrador. Psikia Hub no almacena ni conoce la contraseña del correo.</p>
+    </div>
+    <div class="card">
+      <h2>Fuentes del módulo psicoterapéutico</h2>
+      <details open><summary>Jerarquía</summary><p class="small">Guías clínicas / fuentes institucionales → programas manualizados con evidencia → materiales psicoeducativos profesionales → técnicas de formulación. Cada tarjeta indica el tipo de apoyo.</p></details>
+      <details><summary>Copyright</summary><p class="small">Los enlaces pueden apuntar a materiales accesibles públicamente, pero la app solo incorpora resúmenes propios. “Mindfulness en la vida cotidiana” de Jon Kabat-Zinn es una obra comercial; se usa como referencia conceptual, no se distribuye su texto.</p></details>
+      <details><summary>Coste</summary><p class="small">Las funciones esenciales de esta versión no usan API comercial ni servidor propio y no generan una cuota recurrente.</p></details>
+    </div>
+  </section>
+  <div class="footer">Psikia Hub v1.2 • PWA local-first • Informes + intervención individual + terapia grupal • Sin backend • Sin telemetría • Sin API de pago para funciones esenciales</div>
+</main>
+<nav>
+  <button class="active" data-tab="dictado"><span class="ico">🎙️</span>Dictado</button>
+  <button data-tab="informe"><span class="ico">📄</span>Informe</button>
+  <button data-tab="psicoterapia"><span class="ico">🧩</span>Individual</button>
+  <button data-tab="grupo"><span class="ico">👥</span>Grupo</button>
+  <button data-tab="sugerencias"><span class="ico">🧠</span>Control</button>
+  <button data-tab="recursos"><span class="ico">🧭</span>Navarra</button>
+  <button data-tab="ajustes"><span class="ico">⚙️</span>Ajustes</button>
+</nav>
+<script src="app.js"></script>
+</body>
+</html>

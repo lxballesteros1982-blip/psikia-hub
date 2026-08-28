@@ -1,4 +1,4 @@
-# Psikia Hub v4.1 · motor clínico híbrido local
+# Psikia Hub v4.1 · fuentes clínicas + soporte farmacoterapéutico local
 
 PWA clínica local-first, no comercial, para apoyo a documentación clínica. El profesional debe revisar y validar siempre la salida antes de incorporarla a la historia clínica.
 
@@ -14,7 +14,7 @@ Esta versión sustituye el troceado literal de frases por un motor local en vari
 6. continuidad longitudinal: diagnóstico y tratamiento persisten salvo cambio explícito;
 7. diferencial adaptativo: más hipótesis con poca información y menos al aumentar los datos clínicos.
 
-Incluye además el add-on visible de Escalas/Exploraciones, consulta médica general, grupos TMG, cámara, multiusuario local y correo en texto.
+Incluye además el add-on visible de Escalas/Exploraciones, orientación diagnóstica adaptativa, **opciones farmacoterapéuticas seleccionables**, consulta médica general, grupos TMG, cámara, multiusuario local y correo en texto.
 
 ## Referencias técnicas abiertas utilizadas como arquitectura
 
@@ -40,7 +40,12 @@ El dictado patrón de UR con esquizofrenia/pariperidona se comprueba antes de pu
 Los recursos externos anteriores no reciben contenido clínico en esta versión. El procesamiento esencial se realiza localmente en el navegador/PWA. El diseño no equivale a certificación jurídica, de seguridad o de producto sanitario.
 
 
-## v4.1 · Biblioteca clínica local
-- Mejora de exploración psicopatológica y riesgo basada en los manuales aportados por el usuario.
-- Revisión farmacológica opcional conservadora (alerta, nunca autocorrección silenciosa).
-- Urgencias con extracción explícita de riesgo, exploración física e investigaciones cuando se dictan.
+## v4.1 · fuentes clínicas y farmacoterapia
+
+- Añade un acordeón **Tratamiento farmacológico · opciones** y acceso rápido 💊.
+- Sugiere estrategias y moléculas según síndrome/diferencial, tratamiento actual, respuesta, adherencia y señales de seguridad.
+- En psicosis contempla mantener tratamiento eficaz, LAI si hay problemas de adherencia, comparación por perfiles y clozapina si se documenta resistencia confirmada.
+- En depresión, ansiedad/pánico y trastorno bipolar ofrece alternativas breves y monitorización clave.
+- Las opciones no modifican el informe hasta que el profesional selecciona una y pulsa “Añadir opción”.
+- No se incorporan dosis automáticas: deben verificarse ficha técnica vigente, AEMPS/CIMA, interacciones y situación clínica individual.
+- Fuentes clínicas de diseño: DSM-5-TR, Emergencies in Psychiatry, Maudsley 15e, Stahl Prescriber’s Guide 8e y apuntes de psicofarmacología aportados al proyecto. Los textos originales no se distribuyen dentro de la PWA.

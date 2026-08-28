@@ -1,1 +1,1 @@
-{"version":"4.1","engine":"hybrid-sectionizer-rewriter","date":"2026-08-28","features":["sectionizer","context-negation","semantic-rewrite","learned-vocabulary","adaptive-differential","scales-addon","clinical-book-pack","emergency-risk","medication-checks"]}
+{"version":"4.1","engine":"hybrid-sectionizer-rewriter-pharm","date":"2026-08-28","features":["sectionizer","context-negation","semantic-rewrite","learned-vocabulary","adaptive-differential","pharmacotherapy-options","safety-modifiers","scales-addon"]}

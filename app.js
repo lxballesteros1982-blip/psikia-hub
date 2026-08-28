@@ -213,7 +213,7 @@ function getCode(){return ($('#patientCode').value||'').trim().toUpperCase().rep
 function getContext(code=getCode()){return code?patientStore()[code]||null:null}
 function updateContextHint(){const code=getCode(), c=getContext(code);$('#patientCode').value=code;$('#contextDot').classList.toggle('on',!!c);$('#contextHint').textContent=!code?'Código opcional A/AB para enlazar seguimientos.':c?`Contexto longitudinal de ${code} cargado · ${new Date(c.updated).toLocaleDateString('es-ES')}`:`Sin contexto previo para ${code}.`}
 
-const medicationNames=['paliperidona','xeplion','trevicta','byannli','quetiapina','seroquel','risperidona','risperdal','aripiprazol','abilify','olanzapina','zyprexa','clozapina','leponex','amisulprida','solian','haloperidol','fluoxetina','prozac','escitalopram','cipralex','sertralina','venlafaxina','desvenlafaxina','duloxetina','mirtazapina','vortioxetina','brintellix','bupropion','litio','plenur','valproato','depakine','lamotrigina','lamictal','carbamazepina','lorazepam','orfidal','clonazepam','rivotril','diazepam'];
+const medicationNames=['paliperidona','xeplion','trevicta','byannli','quetiapina','seroquel','risperidona','risperdal','aripiprazol','abilify','olanzapina','zyprexa','clozapina','leponex','amisulprida','solian','haloperidol','ziprasidona','lurasidona','latuda','cariprazina','reagila','brexpiprazol','fluoxetina','prozac','escitalopram','cipralex','sertralina','besitran','paroxetina','seroxat','citalopram','fluvoxamina','dumirox','venlafaxina','vandral','desvenlafaxina','pristiq','duloxetina','cymbalta','mirtazapina','rexer','vortioxetina','brintellix','bupropion','elontril','trazodona','deprax','agomelatina','valdoxan','clomipramina','anafranil','litio','plenur','valproato','depakine','lamotrigina','lamictal','carbamazepina','tegretol','topiramato','topamax','pregabalina','lyrica','lorazepam','orfidal','clonazepam','rivotril','diazepam','alprazolam','trankimazin','lormetazepam','noctamid','zolpidem','methylphenidate','metilfenidato','concerta','medikinet','rubifen','lisdexamfetamina','elvanse','atomoxetina','strattera','guanfacina','intuniv'];
 function cleanClinicalText(text){
  let s=String(text||'').replace(/\s+/g,' ').trim();if(!s)return '';
  s=s.replace(/\b(\d+(?:[.,]\d+)?)\s+miligramos?\b/gi,'$1 mg').replace(/\bduerme como un lir[oó]n\b/gi,'duerme bien');
@@ -239,6 +239,7 @@ function extractMedicationPhrase(text){
  return frag.replace(/\b(\d+(?:[.,]\d+)?)\s+miligramos?\b/gi,'$1 mg').replace(/\s+/g,' ').trim().replace(/[,:;]+$/,'');
 }
 function isNoChangeDiagnosis(text){return /\b(?:diagn[oó]stico|juicio(?:\s+cl[ií]nico)?)\s+(?:no\s+cambia|sin\s+cambios|se\s+mantiene)|\bjuicio\s+cl[ií]nico\s+no\s+cambia/i.test(String(text||''))}
+function isNoChangeTreatment(text){return /\b(?:tratamiento|pauta|medicaci[oó]n)\s+(?:no\s+cambia|sin\s+cambios|se\s+mantiene)|\b(?:mantenemos?|mantener|continuar)\s+(?:el\s+)?tratamiento(?:\s+farmacol[oó]gico)?/i.test(String(text||''))}
 function hasTreatmentChange(text){return /\b(?:inici|retir|suspend|aument|redu|baj|sub|cambi|sustitu|ajust|modific)(?:amos|ar|a|o|e|ir)?\b/i.test(String(text||''))}
 function currentPersistentFields(text,rep={}){
  const c=getContext()||{}, diagCandidates=['Diagnóstico al alta','Juicio clínico','Juicio clínico / diagnóstico'], treatCandidates=['Tratamiento actual','Tratamiento al alta','Medicación y alergias'];
@@ -376,18 +377,7 @@ function buildPTI(text){const c=contextSummary(getContext()), n=norm(`${c} ${tex
  };
 }
 function buildDischarge(text){const out=classify(text,sections.discharge);const c=contextSummary(getContext());if(!out['Antecedentes relevantes'])out['Antecedentes relevantes']=c;if(!out['Motivo y contexto del ingreso'])out['Motivo y contexto del ingreso']=c;return out}
-
-function v41BuildEmergency(text){
- const cleaned=applyCustomCorrections(text),base=classify(cleaned,sections.emergency);
- for(const k of Object.keys(base))if(/Exploración psicopatológica/.test(k))base[k]=v4RewriteMSE(base[k]||cleaned);
- const riskSource=[base['Valoración de riesgo'],cleaned].filter(Boolean).join(' ');const risk=v41RewriteRisk(riskSource);if(risk)base['Valoración de riesgo']=risk;
- // Evita que una nota de urgencias omita exploración física/investigaciones cuando se han dictado.
- if(/constantes|temperatura|saturaci[oó]n|tensi[oó]n|glucemia|auscultaci[oó]n|exploraci[oó]n f[ií]sica|anal[ií]tica|t[oó]xicos|ecg|electrocardiograma/i.test(cleaned)){
-   const px=cleaned.match(/(?:constantes|exploraci[oó]n f[ií]sica|anal[ií]tica|t[oó]xicos|ecg|electrocardiograma)[^.;]{0,220}/ig);if(px?.length)base['Pruebas / actuaciones realizadas']=v4JoinFacts(px);
- }
- return base;
-}
-function buildReport(text,type){if(['follow','urFollow'].includes(type))return buildFollow(text,type);if(type==='emergency')return v41BuildEmergency(text);if(type==='pti')return buildPTI(text);if(type==='discharge')return buildDischarge(text);return classify(text,sections[type]||sections.first)}
+function buildReport(text,type){if(['follow','urFollow'].includes(type))return buildFollow(text,type);if(type==='pti')return buildPTI(text);if(type==='discharge')return buildDischarge(text);return classify(text,sections[type]||sections.first)}
 function wordCount(text){return String(text||'').trim().split(/\s+/).filter(Boolean).length}
 function firstValue(rep,keys){for(const k of keys){if(String(rep[k]||'').trim())return rep[k]}return ''}
 function joinValues(rep,keys){return keys.map(k=>String(rep[k]||'').trim()).filter(Boolean).join(' ')}
@@ -442,7 +432,7 @@ function renderReport(){
  $('#therapyDetails').hidden=currentType==='medicalGeneral';
  $('#report').innerHTML=filled.length?filled.map(sec=>reportSectionHtml(sec,currentReport[sec])).join(''):'<div class="small">No se ha podido asignar contenido todavía. Puedes editar el dictado y volver a generar.</div>';
  $$('.reportText').forEach(el=>el.addEventListener('input',()=>{currentReport[el.dataset.sec]=el.textContent.trim();if(Object.prototype.hasOwnProperty.call(fullReport,el.dataset.sec))fullReport[el.dataset.sec]=currentReport[el.dataset.sec];el.classList.toggle('empty',!currentReport[el.dataset.sec])}));
- $('#diagnosticSuggestion').innerHTML=diagnosticHtml(lastInput,currentReport);$('#therapySuggestion').innerHTML=therapyHtml(`${lastInput} ${reportText()}`);if($('#traceText'))$('#traceText').textContent=lastInput;$('#resultCard').hidden=false;$('#resultCard').scrollIntoView({behavior:'smooth',block:'start'});
+ $('#diagnosticSuggestion').innerHTML=diagnosticHtml(lastInput,currentReport);if($('#pharmSuggestion'))$('#pharmSuggestion').innerHTML=pharmacotherapyHtml(`${lastInput} ${reportText()}`);$('#therapySuggestion').innerHTML=therapyHtml(`${lastInput} ${reportText()}`);if($('#traceText'))$('#traceText').textContent=lastInput;$('#resultCard').hidden=false;$('#resultCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function reportText(){return Object.entries(currentReport).filter(([,v])=>String(v||'').trim()).map(([k,v])=>`${k.toUpperCase()}\n${String(v).trim()}`).join('\n\n')}
 function suggestionText(id){return [...document.querySelectorAll(`#${id} .suggestionBox`)].map(x=>x.innerText.trim()).filter(Boolean).join('\n')}
@@ -667,7 +657,7 @@ async function forceAppUpdate(){
 
 
 // ============================================================================
-// v4.0 MOTOR CLÍNICO HÍBRIDO LOCAL
+// v4.1 MOTOR CLÍNICO HÍBRIDO LOCAL + SOPORTE FARMACOTERAPÉUTICO
 // Arquitectura inspirada en medSpaCy Sectionizer/ConText, SymSpell y el enfoque
 // iterativo de diferenciales de DDXPlus/MentalBench. Implementación propia JS,
 // sin enviar el texto clínico a servicios externos.
@@ -676,11 +666,10 @@ let v4GeneratedSnapshot={};
 
 const V4_CLINICAL_TERMS=[
  'paliperidona','quetiapina','risperidona','aripiprazol','olanzapina','clozapina','amisulprida','haloperidol','ziprasidona','lurasidona','cariprazina','brexpiprazol',
- 'fluoxetina','escitalopram','sertralina','paroxetina','citalopram','venlafaxina','desvenlafaxina','duloxetina','mirtazapina','vortioxetina','bupropion','clomipramina',
- 'litio','valproato','lamotrigina','carbamazepina','lorazepam','clonazepam','diazepam','alprazolam','lormetazepam','zolpidem',
- 'xeplion','trevicta','byannli','seroquel','risperdal','abilify','zyprexa','leponex','solian','prozac','cipralex','brintellix','plenur','depakine','lamictal','orfidal','rivotril',
- 'elkarkide','anasaps','psicopatológica','cognitivo-conductual','metacognición','descarrilamiento','neologismos','agorafobia','hipotimia','anhedonia','abulia','autolítica',
- 'akatisia','acatisia','parkinsonismo','discinesia','distonía','hiperprolactinemia','prolactina','síndrome metabólico','hba1c','hemograma','neutropenia','agranulocitosis','miocarditis','qtc','wernicke','delirium','catatonia'
+ 'fluoxetina','escitalopram','sertralina','paroxetina','citalopram','fluvoxamina','venlafaxina','desvenlafaxina','duloxetina','mirtazapina','vortioxetina','bupropion','trazodona','agomelatina','clomipramina',
+ 'litio','valproato','lamotrigina','carbamazepina','topiramato','pregabalina','lorazepam','clonazepam','diazepam','alprazolam','lormetazepam','zolpidem','metilfenidato','lisdexamfetamina','atomoxetina','guanfacina',
+ 'xeplion','trevicta','byannli','seroquel','risperdal','abilify','zyprexa','leponex','solian','latuda','reagila','prozac','cipralex','besitran','seroxat','dumirox','vandral','pristiq','cymbalta','rexer','brintellix','elontril','deprax','valdoxan','anafranil','plenur','depakine','lamictal','tegretol','topamax','lyrica','orfidal','rivotril','trankimazin','noctamid','concerta','medikinet','rubifen','elvanse','strattera','intuniv',
+ 'elkarkide','anasaps','psicopatológica','cognitivo-conductual','metacognición','descarrilamiento','neologismos','agorafobia','hipotimia','anhedonia','abulia','autolítica'
 ];
 const V4_BUILTIN_CORRECTIONS=[
  [/\bmodelo\s+unido\s+conductual\b/gi,'modelo cognitivo-conductual'],
@@ -693,49 +682,15 @@ const V4_BUILTIN_CORRECTIONS=[
  [/\bla\s+consulta\s+hasta\s+el\s+paciente\b/gi,'el paciente'],
  [/\bquema\s+cognitivo\s+conductual\b/gi,'esquema cognitivo-conductual'],
  [/\bpruebas?\s+de\s+realidad\b/gi,'pruebas de realidad'],
- [/\bunidad\s+rehabilitaci[oó]n\b/gi,'Unidad de Rehabilitación']
+ [/\bunidad\s+rehabilitaci[oó]n\b/gi,'Unidad de Rehabilitación'],
+ [/\bel\s*carquide\b/gi,'Elkarkide'],
+ [/\btrankimazin\b/gi,'Trankimazin'],
+ [/\bdeprax\b/gi,'Deprax'],
+ [/\bdumirox\b/gi,'Dumirox'],
+ [/\bvaldoxan\b/gi,'Valdoxan'],
+ [/\belvanse\b/gi,'Elvanse'],
+ [/\bmedikinet\b/gi,'Medikinet']
 ];
-
-
-// v4.1: conocimiento clínico local derivado de manuales de evaluación psiquiátrica,
-// urgencias y psicofarmacología. Se usa para normalizar y ALERTAR, no para
-// sustituir decisiones clínicas ni cambiar fármacos/dosis silenciosamente.
-const V41_BRAND_GENERIC={
- 'seroquel':'quetiapina','xeplion':'paliperidona','trevicta':'paliperidona','byannli':'paliperidona',
- 'risperdal':'risperidona','abilify':'aripiprazol','zyprexa':'olanzapina','leponex':'clozapina','solian':'amisulprida',
- 'prozac':'fluoxetina','cipralex':'escitalopram','brintellix':'vortioxetina','plenur':'litio','depakine':'valproato',
- 'lamictal':'lamotrigina','orfidal':'lorazepam','rivotril':'clonazepam'
-};
-function v41MedicationAlerts(text){
- const n=norm(text),alerts=[];
- if(/\b(?:seroquel|quetiapina)\b/.test(n)&&/\b(?:intramuscular|\bim\b|mensual)\b/.test(n))alerts.push('Revisar fármaco/formulación: quetiapina/Seroquel se ha dictado junto a una vía o periodicidad inyectable. No se ha corregido automáticamente.');
- if(/\bpaliperidona\b/.test(n)&&/\bintramuscular\b/.test(n)&&/\bmensual\b/.test(n))alerts.push('Paliperidona intramuscular mensual: formulación coherente con un LAI mensual; confirmar marca, dosis y fecha de administración en la prescripción.');
- if(/\bclozapina\b|\bleponex\b/.test(n))alerts.push('Clozapina: recordar que requiere monitorización hematológica y vigilancia clínica específica; revisar según protocolo vigente.');
- if(/\b(?:olanzapina|zyprexa|clozapina|leponex)\b/.test(n))alerts.push('Antipsicótico con carga metabólica relevante: valorar que conste el seguimiento físico/metabólico cuando proceda.');
- if(/\blitio\b|\bplenur\b/.test(n))alerts.push('Litio: revisar niveles y monitorización renal/tiroidea según protocolo cuando proceda.');
- return [...new Set(alerts)];
-}
-function v41RiskFacts(text){
- const s=String(text||''),facts=[];
- if(v4Positive(s,/ideaci[oó]n suicida|ideaci[oó]n autol[ií]tica|ideas? de muerte/ig))facts.push('Ideación autolítica/suicida referida');
- if(/plan(?:ificad[oa])?.{0,30}(?:suicid|autol)/i.test(s)||/(?:suicid|autol).{0,30}plan/i.test(s))facts.push('Existe referencia a planificación; precisar plan, intención y accesibilidad a medios');
- if(/intenci[oó]n.{0,30}(?:suicid|autol)|(?:suicid|autol).{0,30}intenci[oó]n/i.test(s))facts.push('Existe referencia a intención; caracterizar intensidad e inmediatez');
- if(/intento previo|autolesi[oó]n previa|antecedente.{0,30}(?:suicid|autol)/i.test(s))facts.push('Antecedentes de conducta autolesiva/suicida referidos');
- if(/amenaza.{0,25}(?:matar|agredir)|violencia|heteroagres|agresi[oó]n/i.test(s))facts.push('Riesgo de violencia/heteroagresividad referido, a caracterizar');
- if(/alucinaci[oó]n.{0,20}imperativa|voces?.{0,20}(?:ordenan|mandan)|alucinaciones? de mandato/i.test(s))facts.push('Síntomas perceptivos de mandato: revisar relación con riesgo');
- if(/delirio.{0,30}persecut|ideas? persecutorias/i.test(s))facts.push('Ideación persecutoria: valorar asociación con riesgo hacia sí/terceros');
- if(/consumo.{0,30}(?:alcohol|cannabis|coca[ií]na|anfetamina)|intoxicaci[oó]n/i.test(s))facts.push('Consumo/intoxicación como posible modulador de riesgo');
- if(/abandono.{0,25}tratamiento|no adherencia|desvinculaci[oó]n|no acude/i.test(s))facts.push('Problemas de adherencia/vinculación potencialmente relevantes para riesgo');
- if(/sin ideaci[oó]n suicida|sin ideaci[oó]n autol[ií]tica|niega ideaci[oó]n suicida|no presenta ideaci[oó]n autol[ií]tica/i.test(s))facts.push('Niega ideación autolítica/suicida actual');
- return [...new Set(facts)];
-}
-function v41RewriteRisk(text){const f=v41RiskFacts(text);return f.length?v4JoinFacts(f):v4EnsureSentence(text)}
-function v41PhysicalHealthPrompts(text){
- const n=norm(text),facts=[];
- if(/antipsicot|paliperid|risperid|olanzap|quetiap|clozap|aripip/.test(n))facts.push('Si procede, revisar peso/IMC, tensión arterial y parámetros metabólicos; considerar ECG y prolactina según fármaco y contexto clínico.');
- if(/clozap|leponex/.test(n))facts.push('Si hay fiebre, infección, dolor torácico, disnea o taquicardia persistente con clozapina, valorar de forma prioritaria complicaciones hematológicas/cardiacas conforme al protocolo vigente.');
- return facts;
-}
 function v4Levenshtein(a,b){a=norm(a).replace(/[^a-z0-9]/g,'');b=norm(b).replace(/[^a-z0-9]/g,'');if(a===b)return 0;if(!a)return b.length;if(!b)return a.length;let prev=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let cur=[i];for(let j=1;j<=b.length;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur}return prev[b.length]}
 function v4FuzzyTerms(text){
  let tokens=String(text||'').split(/(\s+)/);for(let i=0;i<tokens.length;i++){const raw=tokens[i];if(!/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ-]{6,}$/.test(raw))continue;const n=norm(raw).replace(/-/g,'');if(V4_CLINICAL_TERMS.some(t=>norm(t).replace(/[^a-z]/g,'')===n.replace(/[^a-z]/g,'')))continue;let best=null,bestR=1;for(const term of V4_CLINICAL_TERMS){if(term.includes(' ')||term.includes('-'))continue;const tn=norm(term);if(Math.abs(tn.length-n.length)>2)continue;const d=v4Levenshtein(n,tn),r=d/Math.max(n.length,tn.length);if(r<bestR){bestR=r;best=term}}if(best&&bestR<=0.20)tokens[i]=best}
@@ -750,7 +705,7 @@ function v4LearnFromEdit(before,after){
  const ow=old.split(/\s+/).length,nw=neu.split(/\s+/).length;if(ow<=5&&nw<=5&&Math.max(old.length,neu.length)<=60){if(v4SaveLearnedCorrection(old,neu)){$('#saveHint').textContent=`Corrección aprendida para este usuario: “${old}” → “${neu}”.`}}
 }
 
-function v4Negated(src,index){const pre=norm(src.slice(Math.max(0,index-38),index));return /(?:\bno\b|\bniega\b|\bsin\b|\bausencia de\b|\bno presenta\b)[^.;,]{0,24}$/.test(pre)}
+function v4Negated(src,index){const pre=norm(src.slice(Math.max(0,index-38),index));return /(?:\bno\b|\bniega\b|\bsin\b|\bni\b|\bausencia de\b|\bno presenta\b)[^.;,]{0,34}$/.test(pre)}
 function v4Positive(src,re){const flags=re.flags.includes('g')?re.flags:re.flags+'g',rx=new RegExp(re.source,flags);let m;while((m=rx.exec(src))){if(!v4Negated(src,m.index))return true;if(m[0].length===0)rx.lastIndex++}return false}
 function v4EnsureSentence(s){s=String(s||'').replace(/\s+/g,' ').trim().replace(/^[,;:.\s]+|[,;:\s]+$/g,'');if(!s)return '';s=s.charAt(0).toUpperCase()+s.slice(1);return /[.!?]$/.test(s)?s:s+'.'}
 function v4JoinFacts(facts){return dedupe(facts.map(v4EnsureSentence).filter(Boolean)).join(' ')}
@@ -804,20 +759,16 @@ function v4RewriteEvolution(text){const s=applyCustomCorrections(text),facts=[];
 }
 function v4RewriteMSE(text){const s=applyCustomCorrections(text),facts=[];
  if(/consciente.{0,18}orientad|orientad.{0,18}consciente/i.test(s))facts.push('Paciente consciente y orientado');else if(/consciente/i.test(s))facts.push('Paciente consciente');
- if(/aspecto.{0,24}(?:arreglad|adecuad|cuidado)/i.test(s))facts.push('Aspecto adecuadamente cuidado');if(/desali[nñ]ad|aspecto descuidado/i.test(s))facts.push('Aspecto desaliñado/descuidado');if(/escaso contacto visual/i.test(s))facts.push('Escaso contacto visual');
- if(/colaborador|cooperador|abordable/i.test(s))facts.push('Actitud colaboradora y adecuadamente abordable');if(/hostil|oposicion|poco colaborador/i.test(s))facts.push('Actitud con escasa colaboración/oposicionismo según lo descrito');
- if(/discurso.{0,45}(?:formalmente|globalmente)?\s*(?:correcto|adecuado|coherente)/i.test(s))facts.push('Discurso globalmente adecuado y coherente');if(/hipof[oó]nic/i.test(s))facts.push('Discurso hipofónico');if(/presi[oó]n del habla|verborrea|taquilalia/i.test(s))facts.push('Aumento de la producción/velocidad del habla');if(/latencia.{0,18}respuesta/i.test(s))facts.push('Aumento de la latencia de respuesta');
- if(/descarril/i.test(s))facts.push('Presenta ocasionales descarrilamientos del curso del pensamiento');if(/tangencial/i.test(s))facts.push('Discurso con tendencia a la tangencialidad');if(/neolog|logicismo/i.test(s))facts.push('Se objetivan alteraciones formales del pensamiento descritas en el dictado');if(/bloqueo del pensamiento|bloqueos? del curso/i.test(s))facts.push('Se describen bloqueos del curso del pensamiento');
- if(v4Positive(s,/ideas? delirantes?|contenido delirante|productividad delirante/ig)){let f='Persisten ideas delirantes';if(/bizar/i.test(s))f+=' de contenido bizarro';if(/persecut/i.test(s))f+=' de contenido persecutorio';facts.push(f)}
+ if(/aspecto.{0,20}(?:arreglad|adecuad)/i.test(s))facts.push('Aspecto adecuadamente cuidado');if(/desali[nñ]ad/i.test(s))facts.push('Aspecto desaliñado');if(/escaso contacto visual/i.test(s))facts.push('Escaso contacto visual');
+ if(/discurso.{0,40}(?:formalmente|globalmente)?\s*(?:correcto|adecuado)/i.test(s))facts.push('Discurso globalmente adecuado');if(/hipof[oó]nic/i.test(s))facts.push('Discurso hipofónico');if(/latencia.{0,15}respuesta/i.test(s))facts.push('Aumento de la latencia de respuesta');
+ if(/descarril/i.test(s))facts.push('Presenta ocasionales descarrilamientos del curso del pensamiento');if(/tangencial/i.test(s))facts.push('Discurso con tendencia a la tangencialidad');if(/neolog|logicismo/i.test(s))facts.push('Se objetivan alteraciones formales del pensamiento descritas en el dictado');
+ if(v4Positive(s,/ideas? delirantes?|contenido delirante|productividad delirante/ig)){let f='Persisten ideas delirantes';if(/bizar/i.test(s))f+=' de contenido bizarro';facts.push(f)}
  if(/hip[oó]tesis alternativa|permeable|flexib/i.test(s)&&/delir|creencia/i.test(s))facts.push('Muestra cierta permeabilidad a hipótesis alternativas');
- if(v4Positive(s,/alucin|voces|fen[oó]menos perceptivos/ig))facts.push('Se describen alteraciones perceptivas');else if(/sin alucin|niega alucin|no presenta alucin/i.test(s))facts.push('Sin alteraciones perceptivas referidas');if(/sin desconex|no (?:parece que )?hay desconex/i.test(s))facts.push('Sin desconexión del medio');
- if(/sin alteraciones?.{0,35}(?:polaridad|afectiv)|no (?:hay|parece que haya) alteraciones?.{0,35}(?:polaridad|afectiv)/i.test(s))facts.push('Sin alteraciones relevantes de la polaridad afectiva');else if(/hipotim/i.test(s))facts.push('Hipotimia');else if(/eutim/i.test(s))facts.push('Eutimia');else if(/elevaci[oó]n del [aá]nimo|euforia|expansiv/i.test(s))facts.push('Ánimo elevado/expansivo según lo descrito');
- if(/ansiedad.{0,20}(?:ausente|no|sin)|sin ansiedad/i.test(s))facts.push('Sin sintomatología ansiosa relevante en la exploración');else if(/ansiedad|angustia/i.test(s))facts.push('Sintomatología ansiosa referida');
- if(/sin ideaci[oó]n autol[ií]tica|no (?:presenta|tiene|hay).{0,28}(?:ideaci[oó]n )?autol[ií]tica|niega ideaci[oó]n suicida/i.test(s))facts.push('Sin ideación autolítica referida');else if(v4Positive(s,/ideaci[oó]n autol[ií]tica|ideas? de muerte|suicid/ig))facts.push('Ideación autolítica referida, a caracterizar en cuanto a planificación, intención y medidas de seguridad');
+ if(v4Positive(s,/alucin|voces|fen[oó]menos perceptivos/ig))facts.push('Se describen alteraciones perceptivas');if(/sin desconex|no (?:parece que )?hay desconex/i.test(s))facts.push('Sin desconexión del medio');
+ if(/sin alteraciones?.{0,35}(?:polaridad|afectiv)|no (?:hay|parece que haya) alteraciones?.{0,35}(?:polaridad|afectiv)/i.test(s))facts.push('Sin alteraciones relevantes de la polaridad afectiva');else if(/hipotim/i.test(s))facts.push('Hipotimia');else if(/eutim/i.test(s))facts.push('Eutimia');
+ if(/sin ideaci[oó]n autol[ií]tica|no (?:presenta|tiene|hay).{0,28}(?:ideaci[oó]n )?autol[ií]tica/i.test(s))facts.push('Sin ideación autolítica referida');else if(v4Positive(s,/ideaci[oó]n autol[ií]tica|ideas? de muerte|suicid/ig))facts.push('Ideación autolítica referida, a caracterizar según el dictado');
  if(/planes? de futuro.{0,20}(?:conservad|proporcional)|hace planes? de futuro/i.test(s))facts.push('Planes de futuro conservados');
- if(/insight|conciencia de enfermedad|cr[ií]tica de enfermedad/i.test(s)){if(/parcial|limitad|escas/i.test(s))facts.push('Insight/conciencia de enfermedad parcial o limitada');else facts.push('Insight/conciencia de enfermedad preservado según lo descrito')}
- if(/juicio de realidad|pruebas de realidad|contacto con la realidad/i.test(s))facts.push('Juicio de realidad explorado según lo descrito');
- if(/duerme bien|sue[nñ]o.{0,18}(?:conservado|bueno)/i.test(s))facts.push('Sueño conservado');if(/insomnio|despertar precoz/i.test(s))facts.push(/despertar precoz/i.test(s)?'Insomnio con despertar precoz':'Insomnio');if(/come bien|apetito.{0,18}(?:conservado|bueno)/i.test(s))facts.push('Apetito conservado');if(/hiporexia|p[eé]rdida de apetito/i.test(s))facts.push('Hiporexia');
+ if(/duerme bien|sue[nñ]o.{0,18}(?:conservado|bueno)/i.test(s))facts.push('Sueño conservado');if(/come bien|apetito.{0,18}(?:conservado|bueno)/i.test(s))facts.push('Apetito conservado');if(/hiporexia|p[eé]rdida de apetito/i.test(s))facts.push('Hiporexia');
  return facts.length?v4JoinFacts(facts):v4EnsureSentence(s);
 }
 function v4RewritePlan(text,summary,full){const s=applyCustomCorrections(text),facts=[],context=getContext()||{},med=v4Medication(full||summary)||context.treatment||v4Medication(summary);
@@ -844,43 +795,117 @@ function classify(text,list){const out=Object.fromEntries(list.map(s=>[s,[]]));h
 
 const V4_DX=[
  {name:'Esquizofrenia / espectro de esquizofrenia',code:'F20.9',cluster:'psychosis',pos:[/esquizofren/,/delir/,/alucin/,/descarril/,/neolog/,/psicosis/],strong:/esquizofrenia/i},
- {name:'Trastorno esquizoafectivo',code:'F25.9',cluster:'psychosis',pos:[/delir|alucin|psicosis/,/depres|mania|hipoman|polaridad afectiva/]},
+ {name:'Trastorno esquizoafectivo',code:'F25.9',cluster:'psychosis',pos:[/delir|alucin|psicosis/,/depres|mania|hipoman|polaridad afectiva/],minHits:2},
  {name:'Trastorno delirante',code:'F22',cluster:'psychosis',pos:[/delir/],neg:[/descarril|desorganiz|alucinaciones? prominentes/]},
  {name:'Trastorno psicótico breve / cuadro psicótico agudo',code:'F23',cluster:'psychosis',pos:[/psicosis|delir|alucin/],bonus:/inicio (?:brusco|agudo)|d[ií]as|semanas/i},
- {name:'Trastorno psicótico inducido por sustancias',code:'F19.959',cluster:'psychosis',pos:[/psicosis|delir|alucin/,/cannabis|cocaina|anfetamina|sustancias?/]},
+ {name:'Trastorno psicótico inducido por sustancias',code:'F19.959',cluster:'psychosis',pos:[/psicosis|delir|alucin/,/cannabis|cocaina|anfetamina|sustancias?/],minHits:2},
+ {name:'Trastorno psicótico debido a otra afección médica',code:'F06.2',cluster:'psychosis',pos:[/psicosis|delir|alucin/,/neurolog|endocrin|infecci|metabolic|m[eé]dic/],minHits:2},
+ {name:'Trastorno psicótico no especificado',code:'F29',cluster:'psychosis',pos:[/psicosis|delir|alucin/]},
  {name:'Trastorno depresivo mayor / episodio depresivo',code:'F32.9',cluster:'mood',pos:[/depres|hipotim|anhed|culpa|desesperanza|abul|apat/],strong:/depresi[oó]n mayor/i},
- {name:'Trastorno depresivo recurrente',code:'F33.9',cluster:'mood',pos:[/depres|hipotim|anhed/,/recurrente|episodios previos/]},
+ {name:'Trastorno depresivo recurrente',code:'F33.9',cluster:'mood',pos:[/depres|hipotim|anhed/,/recurrente|episodios previos/],minHits:2},
  {name:'Trastorno bipolar',code:'F31.9',cluster:'mood',pos:[/bipolar|mania|maniform|hipoman|euforia|disminuci[oó]n.*sue[nñ]o/]},
- {name:'Trastorno de adaptación',code:'F43.2',cluster:'mood',pos:[/desencaden|p[eé]rdida|cambio vital|estr[eé]s|accidente/,/ansiedad|depres|malestar/]},
- {name:'Trastorno de pánico',code:'F41.0',cluster:'anxiety',pos:[/crisis de angustia|ataque de p[aá]nico|palpitaciones|falta de aire/]},
+ {name:'Trastorno de adaptación',code:'F43.2',cluster:'mood',pos:[/desencaden|p[eé]rdida|cambio vital|estr[eé]s|accidente/,/ansiedad|depres|malestar/],minHits:2},
+ {name:'Trastorno depresivo persistente (distimia)',code:'F34.1',cluster:'mood',pos:[/distimia|depresi[oó]n persistente|cr[oó]nic|a[nñ]os/]},
+ {name:'Trastorno depresivo inducido por sustancias/medicación',code:'CIE a verificar',cluster:'mood',pos:[/depres|hipotim|anhed/,/cannabis|alcohol|cocaina|f[aá]rmaco|medicaci[oó]n/],minHits:2},
+ {name:'Trastorno depresivo debido a otra afección médica',code:'CIE a verificar',cluster:'mood',pos:[/depres|hipotim|anhed/,/endocrin|neurolog|infecci|m[eé]dic|tiroid/],minHits:2},
+ {name:'Trastorno de pánico',code:'F41.0',cluster:'anxiety',pos:[/crisis de angustia|crisis de p[aá]nico|ataque de p[aá]nico|palpitaciones|falta de aire/]},
  {name:'Agorafobia',code:'F40.0',cluster:'anxiety',pos:[/agoraf|centros comerciales|sitios concurridos|evita.*salir|no coge el coche/]},
- {name:'Trastorno de ansiedad generalizada',code:'F41.1',cluster:'anxiety',pos:[/ansiedad flotante|preocupaci[oó]n excesiva|ansiedad generalizada/]},
+ {name:'Trastorno de ansiedad generalizada',code:'F41.1',cluster:'anxiety',pos:[/ansiedad|ansiedad flotante|preocupaci[oó]n excesiva|ansiedad generalizada/]},
  {name:'Trastorno obsesivo-compulsivo',code:'F42.9',cluster:'anxiety',pos:[/obsesi|compulsi|ritual/]},
+ {name:'Trastorno de ansiedad no especificado',code:'F41.9',cluster:'anxiety',pos:[/ansiedad|angustia|nervios/]},
+ {name:'Trastorno de ansiedad inducido por sustancias/medicación',code:'CIE a verificar',cluster:'anxiety',pos:[/ansiedad|p[aá]nico|angustia/,/cafe[ií]na|cannabis|cocaina|anfetamina|f[aá]rmaco|retirada/],minHits:2},
+ {name:'Trastorno de ansiedad debido a otra afección médica',code:'F06.4',cluster:'anxiety',pos:[/ansiedad|p[aá]nico|angustia/,/tiroid|arrit|asma|endocrin|neurolog|m[eé]dic/],minHits:2},
  {name:'Trastorno por estrés postraumático / relacionado con trauma',code:'F43.10',cluster:'trauma',pos:[/trauma|accidente|pesadillas|flashback|hipervigil|evitaci[oó]n/]},
  {name:'Trastorno límite de la personalidad',code:'F60.3',cluster:'personality',pos:[/l[ií]mite|inestabilidad interpersonal|vac[ií]o|autoles|impulsiv|abandono/]},
  {name:'Trastorno de personalidad dependiente',code:'F60.7',cluster:'personality',pos:[/dependen|sumisi|dificultad.*decisiones|miedo.*separaci[oó]n/]},
  {name:'TDAH en adulto',code:'F90.9',cluster:'neurodevelopment',pos:[/tdah|inatenci|hiperactiv|impulsiv|distractibilidad/]},
  {name:'Trastorno del espectro autista',code:'F84.0',cluster:'neurodevelopment',pos:[/autis|asperger|rigidez social|intereses restringidos/]}
 ];
-function v4DxScore(dx,text){let score=0,hits=0;for(const re of dx.pos||[]){if(v4Positive(text,new RegExp(re.source,'ig'))){score+=2;hits++}}if(dx.strong&&dx.strong.test(text))score+=6;if(dx.bonus&&dx.bonus.test(text))score+=1;for(const re of dx.neg||[])if(v4Positive(text,new RegExp(re.source,'ig')))score-=1.5;return {score,hits}}
+function v4DxScore(dx,text){let score=0,hits=0;for(const re of dx.pos||[]){if(v4Positive(text,new RegExp(re.source,'ig'))){score+=2;hits++}}const strong=!!(dx.strong&&dx.strong.test(text));if(strong)score+=6;if(dx.minHits&&!strong&&hits<dx.minHits)score=0;if(dx.bonus&&dx.bonus.test(text)&&score>0)score+=1;for(const re of dx.neg||[])if(v4Positive(text,new RegExp(re.source,'ig')))score-=1.5;return {score,hits}}
 function v4InfoCount(text){const patterns=[/delir|alucin|psicos/,/depres|hipotim|anhed/,/mania|hipoman|bipolar/,/ansiedad|p[aá]nico|angustia/,/agoraf|evitaci[oó]n/,/obsesi|compulsi/,/trauma|accidente/,/consumo|cannabis|alcohol|cocaina/,/autolit|suicid/,/sue[nñ]o|insom/,/apetito|hiporexia/,/funcional|trabajo|social|autocuidado/,/durante|desde hace|meses|semanas|d[ií]as/,/antecedentes|episodios previos/,/tratamiento|mg|intramuscular/];return patterns.reduce((a,re)=>a+(re.test(norm(text))?1:0),0)}
-function v4Differential(text){const full=applyCustomCorrections(`${text} ${reportText()}`),ctx=getContext()||{},explicit=extractExplicitDiagnosis(full)||ctx.diagnosis||'',info=v4InfoCount(full);let scored=V4_DX.map(d=>({...d,...v4DxScore(d,full)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);if(explicit){const exNorm=norm(explicit);const exact=scored.find(x=>exNorm.includes(norm(x.name.split('/')[0]).slice(0,10))||norm(x.name).includes(exNorm.slice(0,10)));if(exact){scored=scored.filter(x=>x!==exact);scored.unshift({...exact,score:exact.score+8})}}
- if(!scored.length)return {items:[],info};const topCluster=scored[0].cluster;let pool=scored.filter(x=>x.cluster===topCluster||x.score>=scored[0].score-1.5);const n=explicit?Math.min(3,pool.length):(info<=2?Math.min(7,pool.length):info<=4?Math.min(6,pool.length):info<=7?Math.min(5,pool.length):info<=10?Math.min(4,pool.length):Math.min(3,pool.length));return {items:pool.slice(0,Math.max(1,n)),info,explicit}}
+function v4Differential(text){const full=applyCustomCorrections(`${text} ${reportText()}`),ctx=getContext()||{},explicit=extractExplicitDiagnosis(full)||ctx.diagnosis||'',info=v4InfoCount(full);const all=V4_DX.map(d=>({...d,...v4DxScore(d,full)}));let scored=all.filter(x=>x.score>0).sort((a,b)=>b.score-a.score);if(explicit){const exNorm=norm(explicit);const exact=scored.find(x=>exNorm.includes(norm(x.name.split('/')[0]).slice(0,10))||norm(x.name).includes(exNorm.slice(0,10)));if(exact){scored=scored.filter(x=>x!==exact);scored.unshift({...exact,score:exact.score+8})}}
+ if(!scored.length)return {items:[],info};const topCluster=scored[0].cluster;const target=explicit?3:(info<=2?7:info<=4?6:info<=7?5:info<=10?4:3);let pool=scored.filter(x=>x.cluster===topCluster||x.score>=scored[0].score-1.5);if(!explicit&&pool.length<target){for(const x of all.filter(x=>x.cluster===topCluster&&x.score<=0)){if(!pool.some(y=>y.name===x.name))pool.push({...x,lowEvidence:true});if(pool.length>=target)break}}return {items:pool.slice(0,Math.min(target,pool.length)),info,explicit}}
 function v4MissingQuestions(items,text){if(!items.length)return [];const cl=items[0].cluster,n=norm(text),q=[];if(cl==='psychosis'){if(!/mes|semana|d[ií]a|duraci/.test(n))q.push('duración y curso de la clínica psicótica');if(!/depres|mania|hipoman|afectiv/.test(n))q.push('relación temporal con síntomas afectivos');if(!/consumo|cannabis|cocaina|sustancia/.test(n))q.push('consumo de sustancias y temporalidad');if(!/funcion|laboral|social|autocuidado/.test(n))q.push('repercusión funcional y evolución basal')}
  if(cl==='mood'){if(!/semana|mes|d[ií]a|duraci/.test(n))q.push('duración del síndrome actual');if(!/mania|hipoman/.test(n))q.push('antecedentes de manía/hipomanía');if(!/psicos|delir|alucin/.test(n))q.push('presencia o ausencia de síntomas psicóticos');if(!/episodios previos|recurrente/.test(n))q.push('número y características de episodios previos')}
  if(cl==='anxiety'){if(!/duraci|mes|semana/.test(n))q.push('duración y persistencia');if(!/inesperad/.test(n)&&/panico|angustia/.test(n))q.push('si las crisis son inesperadas o situacionales');if(!/evitaci|agoraf/.test(n))q.push('conductas de evitación y repercusión funcional')}
  return q.slice(0,4)}
-function diagnosticHtml(text,rep){const {items,info,explicit}=v4Differential(text);if(!items.length)return '<div class="small">La información actual no permite construir un diferencial útil. Añade síntomas, duración, curso y repercusión funcional.</div>';let html='';if(isNoChangeDiagnosis(text)&&(getContext()?.diagnosis||extractDiagnosisPhrase(text)))html+=`<div class="suggestionBox"><strong>Diagnóstico longitudinal mantenido</strong><br>${esc(getContext()?.diagnosis||extractDiagnosisPhrase(text))}</div>`;html+=`<div class="small" style="margin-bottom:6px">Hipótesis orientativas ordenadas por apoyo en la información disponible. Con ${info} grupos de datos clínicos detectados, se muestran ${items.length} opciones; al aportar más información el listado se estrecha.</div>`;html+=items.map((x,i)=>`<div class="suggestionBox"><strong>${i+1}. ${esc(x.name)} · ${esc(x.code)}</strong><br>${i===0?'Más apoyado por los datos aportados.':'A considerar en el diferencial.'}</div>`).join('');const q=v4MissingQuestions(items,text);if(q.length)html+=`<div class="suggestionBox"><strong>Datos que más ayudarían a acotar</strong><br>${q.map(esc).join(' · ')}</div>`;return html}
+function diagnosticHtml(text,rep){const {items,info,explicit}=v4Differential(text);if(!items.length)return '<div class="small">La información actual no permite construir un diferencial útil. Añade síntomas, duración, curso y repercusión funcional.</div>';let html='';if(isNoChangeDiagnosis(text)&&(getContext()?.diagnosis||extractDiagnosisPhrase(text)))html+=`<div class="suggestionBox"><strong>Diagnóstico longitudinal mantenido</strong><br>${esc(getContext()?.diagnosis||extractDiagnosisPhrase(text))}</div>`;html+=`<div class="small" style="margin-bottom:6px">Hipótesis orientativas ordenadas por apoyo en la información disponible. Con ${info} grupos de datos clínicos detectados, se muestran ${items.length} opciones; al aportar más información el listado se estrecha.</div>`;html+=items.map((x,i)=>`<div class="suggestionBox"><strong>${i+1}. ${esc(x.name)} · ${esc(x.code)}</strong><br>${i===0?'Más apoyado por los datos aportados.':x.lowEvidence?'Alternativa de baja evidencia mostrada por información todavía escasa.':'A considerar en el diferencial.'}</div>`).join('');const q=v4MissingQuestions(items,text);if(q.length)html+=`<div class="suggestionBox"><strong>Datos que más ayudarían a acotar</strong><br>${q.map(esc).join(' · ')}</div>`;return html}
 
 
-function v41RenderClinicalChecks(){
- let box=$('#v41ClinicalChecks');if(!box){box=document.createElement('details');box.id='v41ClinicalChecks';box.innerHTML='<summary>Revisión clínica · opcional</summary><div class="detailBody" id="v41ClinicalChecksBody"></div>';$('#traceDetails').parentNode.insertBefore(box,$('#traceDetails'));}
- const alerts=v41MedicationAlerts(`${lastInput} ${reportText()}`),phys=v41PhysicalHealthPrompts(`${lastInput} ${reportText()}`),risk=(currentType==='emergency'||/autolit|suicid|heteroagres|violencia/i.test(lastInput))?v41RiskFacts(lastInput):[];
- const all=[...alerts,...phys,...risk];box.hidden=!all.length;$('#v41ClinicalChecksBody').innerHTML=all.length?all.map(x=>`<div class="suggestionBox">${esc(x)}</div>`).join(''):'<div class="small">Sin comprobaciones adicionales relevantes.</div>';
+// ---- v4.1 SOPORTE FARMACOTERAPÉUTICO LOCAL ----
+// Reglas deliberadamente breves: orientan opciones, no prescriben. No contienen
+// texto de los manuales ni sustituyen ficha técnica/AEMPS-CIMA o juicio clínico.
+function v41Has(text,re){return v4Positive(norm(text),new RegExp(re.source,'ig'))}
+function v41CurrentTreatment(text){return v4Medication(`${text} ${getContext()?.treatment||''}`)}
+function v41SafetyFlags(text){
+ const n=norm(`${text} ${reportText()} ${getContext()?.summary||''}`),f=[];
+ if(v41Has(n,/obes|sobrepeso|diabet|dislip|metabol/))f.push('riesgo metabólico');
+ if(v41Has(n,/prolact|galactor|amenor|ginecom|disfuncion sexual/))f.push('prolactina/función sexual');
+ if(v41Has(n,/qt|arrit|cardiopat|sincope|hipokal|hipomag/))f.push('QT/cardiovascular');
+ if(v41Has(n,/renal|insuficiencia renal|filtrado/))f.push('función renal');
+ if(v41Has(n,/hepatic|higado|transamin/))f.push('función hepática');
+ if(v41Has(n,/embaraz|gesta|lactan|fertil|potencial reproduct/))f.push('embarazo/reproducción');
+ if(v41Has(n,/alcohol|benzodiazep|dependencia|adicci/))f.push('dependencia/sustancias');
+ return f;
 }
+function v41Option(id,title,why,watch,source,priority=0){return {id,title,why,watch,source,priority}}
+function v41PharmOptions(text){
+ const full=applyCustomCorrections(`${text} ${reportText()} ${getContext()?.summary||''}`),n=norm(full),dx=v4Differential(full),top=dx.items[0]||null,cluster=top?.cluster||'',opts=[],flags=v41SafetyFlags(full),current=v41CurrentTreatment(full),stable=/estable|compensad|adaptad|buena adherencia|duerme bien|come bien|sin cambios|mantener|mantenemos/.test(n),noChange=isNoChangeTreatment(full)||/tratamiento no cambia|sin cambios.*tratamiento|mantenemos el tratamiento/.test(n);
+ const add=o=>{if(!opts.some(x=>x.id===o.id))opts.push(o)};
+ if(current&&(stable||noChange))add(v41Option('maintain',`Mantener tratamiento actual: ${current}`,'Si existe respuesta clínica/funcional y tolerabilidad, la primera opción es no cambiar por inercia el tratamiento eficaz.','Revisar adherencia, efectos adversos y monitorización que corresponda al fármaco actual.','Maudsley / Stahl',100));
+ if(cluster==='psychosis'||v41Has(full,/esquizof|psicosis|delir|alucin/)){
+   if(!current)add(v41Option('sgaprof','Antipsicótico de segunda generación según perfil','Elegir de forma compartida según síntomas, respuesta previa, preferencias, adherencia y perfil de efectos adversos.','Comparar riesgo metabólico, prolactina, síntomas extrapiramidales, sedación y QT antes de escoger.','Maudsley / Stahl',80));
+   if(/adherencia.*mala|incumpl|abandono.*trat|olvida.*medic|no toma/.test(n))add(v41Option('lai','Valorar formulación inyectable de larga duración','Puede simplificar la pauta y hacer más visible la adherencia cuando ésta es un problema clínico.','Elegir molécula según respuesta/tolerancia oral previa y requisitos específicos de cada LAI.','Maudsley',88));
+   add(v41Option('aripiprazole','Aripiprazol como alternativa de perfil','Alternativa cuando interesa minimizar carga metabólica/prolactina o sedación respecto a otras opciones.','Puede producir activación/acatisia; revisar interacciones y adecuación clínica individual.','Stahl / psicofarmacología',55));
+   add(v41Option('lurasidone','Lurasidona como alternativa de perfil','Opción a considerar cuando preocupa especialmente el componente metabólico o el QT dentro del conjunto de alternativas.','Verificar indicación, interacciones, administración con alimentos y tolerabilidad en CIMA.','Stahl / psicofarmacología',50));
+   add(v41Option('olanzapine','Olanzapina si prima eficacia/tolerabilidad previa','Puede ser una opción útil si la respuesta previa fue buena o se necesita una alternativa con experiencia clínica amplia.','Especial atención a peso, glucemia y lípidos; evitar convertir la sedación en el único criterio de elección.','Maudsley / Stahl',45));
+   const tr=/resistent|refract|dos antipsicot|2 antipsicot|dos tratamientos|fracas.*antipsicot/.test(n);
+   if(tr)add(v41Option('clozapine','Clozapina ante resistencia confirmada','Tras al menos dos ensayos antipsicóticos adecuados sin respuesta suficiente, debe entrar explícitamente en el algoritmo de decisión.','Requiere protocolo específico y vigilancia hematológica, metabólica, gastrointestinal y de toxicidades graves; verificar requisitos locales actuales.','Maudsley / Stahl',95));
+   else add(v41Option('verifytr','Si la respuesta es insuficiente: verificar antes de escalar','Antes de etiquetar resistencia, confirmar adherencia, dosis/duración adecuadas, sustancias, diagnóstico y causas de pseudorresistencia.','Si se confirman dos ensayos adecuados fallidos, reconsiderar clozapina.','Maudsley',60));
+ }
+ if(cluster==='mood'||v41Has(full,/depres|hipotim|anhed/)){
+   if(v41Has(full,/mania|hipoman|bipolar/)){
+     add(v41Option('bipolar-lit','Litio','Opción central para estabilización y prevención de recaídas cuando el perfil clínico y médico lo permite.','Requiere función renal/tiroidea, niveles plasmáticos e interacciones; atención a deshidratación y toxicidad.','Maudsley / Stahl',85));
+     add(v41Option('bipolar-sga','Antipsicótico con evidencia en trastorno bipolar','Quetiapina, aripiprazol, olanzapina u otras opciones pueden encajar según fase y perfil de efectos adversos.','La elección depende de fase (manía/depresión/mantenimiento), comorbilidad y tratamientos previos.','Maudsley / Stahl',75));
+     if(/depres|fase depresiva|depresion bipolar/.test(n))add(v41Option('bipolar-dep','Depresión bipolar: quetiapina / lurasidona / lamotrigina / litio','Con clínica depresiva bipolar conviene elegir una estrategia propia del trastorno bipolar, no extrapolar sin más del tratamiento unipolar.','Evitar sugerir antidepresivo en monoterapia si existe bipolaridad probable; revisar polaridad mixta y antecedentes de activación.','Maudsley / Stahl',90));
+     if(/valpro|depakine/.test(n)||!flags.includes('embarazo/reproducción'))add(v41Option('valproate','Valproato solo tras comprobar restricciones actuales','Puede aparecer entre las opciones de estabilización, pero su uso está fuertemente condicionado por seguridad reproductiva y normativa vigente.','Verificar siempre restricciones AEMPS/CIMA, sexo/potencial reproductivo, consentimiento y monitorización antes de considerarlo.','Maudsley / AEMPS a verificar',35));
+   }else{
+     add(v41Option('ssri','ISRS: sertralina o escitalopram como opciones habituales','Son alternativas de primera línea frecuentes cuando está indicada farmacoterapia antidepresiva y no hay datos que obliguen a otra estrategia.','Revisar activación, disfunción sexual, sangrado, hiponatremia, QT/interacciones y antecedente de bipolaridad.','Maudsley / Stahl / psicofarmacología',82));
+     if(/insom|hiporexia|bajo apetito|perdida de peso/.test(n))add(v41Option('mirtazapine','Mirtazapina si insomnio o bajo apetito pesan en la decisión','Su perfil sedante y de aumento de apetito puede convertir efectos adversos previsibles en una ventaja clínica seleccionada.','Valorar somnolencia y ganancia ponderal/metabólica.','Maudsley / Stahl',78));
+     add(v41Option('snri','IRSN: venlafaxina o duloxetina','Alternativas razonables si un ISRS no encaja, existe respuesta previa o hay síntomas/comorbilidades que favorezcan un dual.','Venlafaxina: TA y retirada; duloxetina: función hepática/interacciones y comorbilidad dolorosa.','Maudsley / Stahl / psicofarmacología',58));
+     if(/resistent|refract|varios antidepres|no respuesta|respuesta parcial/.test(n))add(v41Option('trd','Depresión resistente: cambiar o potenciar de forma estructurada','Tras confirmar ensayo adecuado, adherencia y diagnóstico, valorar cambio o potenciación con opciones como litio o ciertos antipsicóticos; en casos seleccionados, tratamientos especializados.','Revisar bipolaridad, comorbilidad médica/sustancias y riesgo antes de añadir polifarmacia; ketamina/esketamina/TEC requieren circuito especializado.','Maudsley / Stahl',92));
+   }
+ }
+ if(cluster==='anxiety'||v41Has(full,/panico|agoraf|ansiedad generalizada|obsesi|compulsi/)){
+   add(v41Option('anx-ssri','ISRS: sertralina o escitalopram','Opciones farmacológicas habituales para pánico/ansiedad cuando la intensidad o persistencia lo justifica, combinadas con intervención psicológica cuando procede.','Inicio puede aumentar transitoriamente activación; revisar retirada, sexualidad, sangrado, hiponatremia e interacciones.','Maudsley / Stahl / Emergencies',85));
+   if(/panico|agoraf/.test(n))add(v41Option('anx-snri','Venlafaxina como alternativa','Alternativa con evidencia en trastornos de ansiedad/pánico cuando un ISRS no es adecuado o no funciona.','Monitorizar TA y síndrome de retirada; revisar interacciones.','Maudsley / Stahl',62));
+   if(!v41Has(full,/dependencia|adicci|alcohol|benzodiazep/))add(v41Option('benzo','Benzodiacepina solo como apoyo breve y seleccionado','Puede tener un papel puntual en ansiedad/agitación intensa mientras actúa una estrategia de fondo, no como solución automática mantenida.','Riesgo de sedación, caídas, tolerancia y dependencia; especial cautela con alcohol/opioides y en mayores.','Maudsley / Emergencies',30));
+ }
+ if(cluster==='neurodevelopment'&&v41Has(full,/tdah|inatenci|hiperactiv/)){
+   add(v41Option('adhd-stim','Metilfenidato o lisdexanfetamina','Opciones estimulantes habituales cuando el diagnóstico de TDAH adulto está bien establecido y no hay contraindicaciones.','Revisar TA/FC, sueño, apetito, uso de sustancias y riesgo cardiovascular; verificar indicación y formulación en CIMA.','Stahl',78));
+   add(v41Option('adhd-nonstim','Atomoxetina como alternativa no estimulante','Puede encajar cuando estimulantes no son adecuados, no se toleran o se prefiere una alternativa no estimulante.','Revisar TA/FC, función hepática y posibles interacciones.','Stahl',55));
+ }
+ // Context-sensitive safety demotions/warnings
+ if(flags.includes('riesgo metabólico'))for(const o of opts)if(['olanzapine'].includes(o.id)){o.priority-=25;o.watch+=' El caso aporta riesgo metabólico: pierde prioridad salvo razón clínica clara.'}
+ if(flags.includes('QT/cardiovascular'))for(const o of opts)if(['ssri','anx-ssri'].includes(o.id))o.watch+=' Existe señal cardiovascular/QT: comparar moléculas y revisar ECG/electrolitos/interacciones cuando corresponda.';
+ if(flags.includes('función renal'))for(const o of opts)if(o.id==='bipolar-lit'){o.priority-=30;o.watch+=' Hay señal renal en el caso: requiere valoración específica antes de considerarlo.'}
+ if(flags.includes('embarazo/reproducción')){for(const o of opts)if(o.id==='valproate')o.priority=-100;}
+ const uniq=opts.filter(o=>o.priority>-50).sort((a,b)=>b.priority-a.priority).slice(0,5);
+ return {options:uniq,flags,current,cluster,top};
+}
+function pharmacotherapyHtml(text){
+ const r=v41PharmOptions(text);if(!r.options.length)return '<div class="small">No hay una diana farmacológica suficientemente clara en la información actual. El módulo no fuerza una propuesta sin síndrome/diagnóstico orientativo.</div>';
+ let intro='<div class="legalBox"><b>Apoyo a decisión, no prescripción.</b> Selecciona una opción solo como borrador para tu plan. Antes de usarla, confirma diagnóstico, contraindicaciones, interacciones, dosis y ficha técnica vigente en AEMPS/CIMA.</div>';
+ if(r.flags.length)intro+=`<div class="small" style="margin:7px 0"><b>Factores detectados para modular la elección:</b> ${r.flags.map(esc).join(' · ')}</div>`;
+ const cards=r.options.map((o,i)=>`<label class="pharmOption"><input type="radio" name="pharmChoice" value="${esc(o.id)}" ${i===0?'checked':''}><span><strong>${esc(o.title)}</strong><br><span>${esc(o.why)}</span><br><span class="small"><b>Vigilar:</b> ${esc(o.watch)} · <b>Base:</b> ${esc(o.source)}</span></span></label>`).join('');
+ return intro+cards+'<div class="small" style="margin-top:8px">Las reglas están resumidas/parafraseadas a partir de fuentes clínicas añadidas al proyecto; los manuales no se distribuyen dentro de la PWA.</div>';
+}
+function selectedPharmacotherapyText(){const sel=document.querySelector('input[name="pharmChoice"]:checked');if(!sel)return '';const r=v41PharmOptions(lastInput),o=r.options.find(x=>x.id===sel.value);return o?`${o.title}. ${o.why} Precauciones/monitorización: ${o.watch}`:''}
+function pharmacotherapyTarget(rep){return Object.keys(rep).find(k=>/Tratamiento al alta|Plan de tratamiento e intervención|Plan de tratamiento|Plan de intervención|Tratamiento \/ intervención|Intervención realizada|Intervención y seguimiento|Plan y seguimiento/i.test(k))||therapyTarget(rep)}
+function addPharmacotherapyToDocument(){const t=selectedPharmacotherapyText();if(!t)return alert('Selecciona una opción farmacológica.');const key=pharmacotherapyTarget(fullReport);appendText(fullReport,key,'Opción farmacoterapéutica a valorar: ',t);currentReport=compactMode?compactReport(fullReport,currentType):{...fullReport};renderReport();$('#pharmDetails').open=true;$('#saveHint').textContent='Opción farmacoterapéutica añadida como borrador. Revisa pauta, interacciones y ficha técnica antes de usarla.'}
 
-function v4EnsureAddonBar(){if($('#v4AddonBar'))return;const scale=$('#scalesDetails');if(!scale)return;const bar=document.createElement('div');bar.id='v4AddonBar';bar.className='addonBar';bar.innerHTML='<button type="button" id="quickScales" class="secondary">📏 Escalas</button><button type="button" id="quickDx" class="secondary">🧠 Diagnóstico</button><button type="button" id="quickTherapy" class="secondary">🧩 Psicoterapia</button>';scale.parentNode.insertBefore(bar,scale);$('#quickScales').addEventListener('click',()=>{scale.open=true;scale.scrollIntoView({behavior:'smooth',block:'start'})});$('#quickDx').addEventListener('click',()=>{$('#diagnosticDetails').open=true;$('#diagnosticDetails').scrollIntoView({behavior:'smooth',block:'start'})});$('#quickTherapy').addEventListener('click',()=>{$('#therapyDetails').open=true;$('#therapyDetails').scrollIntoView({behavior:'smooth',block:'start'})})}
-function renderReport(){const list=Object.keys(currentReport),filled=list.filter(sec=>String(currentReport[sec]||'').trim());$('#reportHeading').textContent=labels[currentType]||'Nota clínica';$('#formatBadge').textContent=compactMode?'Formato breve · motor semántico local':'Formato completo · motor semántico local';$('#diagnosticDetails').hidden=currentType==='medicalGeneral';$('#therapyDetails').hidden=currentType==='medicalGeneral';$('#report').innerHTML=filled.length?filled.map(sec=>reportSectionHtml(sec,currentReport[sec])).join(''):'<div class="small">No se ha podido estructurar contenido suficiente. Revisa la transcripción y vuelve a generar.</div>';v4GeneratedSnapshot={...currentReport};$$('.reportText').forEach(el=>{el.addEventListener('input',()=>{currentReport[el.dataset.sec]=el.textContent.trim();if(Object.prototype.hasOwnProperty.call(fullReport,el.dataset.sec))fullReport[el.dataset.sec]=currentReport[el.dataset.sec];el.classList.toggle('empty',!currentReport[el.dataset.sec])});el.addEventListener('blur',()=>{const before=v4GeneratedSnapshot[el.dataset.sec]||'',after=el.textContent.trim();v4LearnFromEdit(before,after);v4GeneratedSnapshot[el.dataset.sec]=after})});$('#diagnosticSuggestion').innerHTML=diagnosticHtml(lastInput,currentReport);$('#therapySuggestion').innerHTML=therapyHtml(`${lastInput} ${reportText()}`);v41RenderClinicalChecks();if($('#traceText'))$('#traceText').textContent=lastInput;$('#resultCard').hidden=false;v4EnsureAddonBar();$('#resultCard').scrollIntoView({behavior:'smooth',block:'start'})}
+function v4EnsureAddonBar(){if($('#v4AddonBar'))return;const scale=$('#scalesDetails');if(!scale)return;const bar=document.createElement('div');bar.id='v4AddonBar';bar.className='addonBar';bar.innerHTML='<button type="button" id="quickScales" class="secondary">📏 Escalas</button><button type="button" id="quickDx" class="secondary">🧠 Diagnóstico</button><button type="button" id="quickPharm" class="secondary">💊 Fármacos</button><button type="button" id="quickTherapy" class="secondary">🧩 Psicoterapia</button>';scale.parentNode.insertBefore(bar,scale);$('#quickScales').addEventListener('click',()=>{scale.open=true;scale.scrollIntoView({behavior:'smooth',block:'start'})});$('#quickDx').addEventListener('click',()=>{$('#diagnosticDetails').open=true;$('#diagnosticDetails').scrollIntoView({behavior:'smooth',block:'start'})});$('#quickPharm').addEventListener('click',()=>{$('#pharmDetails').open=true;$('#pharmDetails').scrollIntoView({behavior:'smooth',block:'start'})});$('#quickTherapy').addEventListener('click',()=>{$('#therapyDetails').open=true;$('#therapyDetails').scrollIntoView({behavior:'smooth',block:'start'})})}
+function renderReport(){const list=Object.keys(currentReport),filled=list.filter(sec=>String(currentReport[sec]||'').trim());$('#reportHeading').textContent=labels[currentType]||'Nota clínica';$('#formatBadge').textContent=compactMode?'Formato breve · motor semántico local':'Formato completo · motor semántico local';$('#diagnosticDetails').hidden=currentType==='medicalGeneral';$('#pharmDetails').hidden=currentType==='medicalGeneral';$('#therapyDetails').hidden=currentType==='medicalGeneral';$('#report').innerHTML=filled.length?filled.map(sec=>reportSectionHtml(sec,currentReport[sec])).join(''):'<div class="small">No se ha podido estructurar contenido suficiente. Revisa la transcripción y vuelve a generar.</div>';v4GeneratedSnapshot={...currentReport};$$('.reportText').forEach(el=>{el.addEventListener('input',()=>{currentReport[el.dataset.sec]=el.textContent.trim();if(Object.prototype.hasOwnProperty.call(fullReport,el.dataset.sec))fullReport[el.dataset.sec]=currentReport[el.dataset.sec];el.classList.toggle('empty',!currentReport[el.dataset.sec])});el.addEventListener('blur',()=>{const before=v4GeneratedSnapshot[el.dataset.sec]||'',after=el.textContent.trim();v4LearnFromEdit(before,after);v4GeneratedSnapshot[el.dataset.sec]=after})});$('#diagnosticSuggestion').innerHTML=diagnosticHtml(lastInput,currentReport);if($('#pharmSuggestion'))$('#pharmSuggestion').innerHTML=pharmacotherapyHtml(`${lastInput} ${reportText()}`);$('#therapySuggestion').innerHTML=therapyHtml(`${lastInput} ${reportText()}`);if($('#traceText'))$('#traceText').textContent=lastInput;$('#resultCard').hidden=false;v4EnsureAddonBar();$('#resultCard').scrollIntoView({behavior:'smooth',block:'start'})}
 
 // ---- EVENTS ----
 $$('nav button').forEach(b=>b.addEventListener('click',()=>{$$('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab').forEach(t=>t.classList.remove('active'));$(`#tab-${b.dataset.tab}`).classList.add('active')}));
@@ -890,7 +915,7 @@ $('#clear').addEventListener('click',()=>{if(dictationWanted)stopDictation();$('
 $('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(reportText());alert('Informe copiado.')}catch{alert('No se pudo copiar automáticamente. Mantén pulsado sobre el texto para copiarlo.')}});
 $('#saveContext').addEventListener('click',saveCurrentContext);
 $('#email').addEventListener('click',()=>{const to=$('#emailAddress').value.trim();if(!to)return alert('Configura el correo profesional en Ajustes.');if(getCode())saveCurrentContext();const subject=encodeURIComponent(`Psikia Hub · ${labels[currentType]}${getCode()?` · ${getCode()}`:''}`);const body=encodeURIComponent(reportText());location.href=`mailto:${encodeURIComponent(to)}?subject=${subject}&body=${body}`});
-$('#dictate').addEventListener('click',toggleDictation);$('#addDiagnostic').addEventListener('click',addDiagnosticToDocument);$('#addTherapy').addEventListener('click',addTherapyToDocument);
+$('#dictate').addEventListener('click',toggleDictation);$('#addDiagnostic').addEventListener('click',addDiagnosticToDocument);$('#addPharm').addEventListener('click',addPharmacotherapyToDocument);$('#addTherapy').addEventListener('click',addTherapyToDocument);
 $('#scaleType').addEventListener('change',renderScaleWorkspace);
 $('#closeImageOverlay').addEventListener('click',closeImageOverlay);$('#imageOverlay').addEventListener('click',e=>{if(e.target===$('#imageOverlay'))closeImageOverlay()});
 $('#activeUserSelect').addEventListener('change',e=>setActiveUser(e.target.value));

@@ -1,7 +1,7 @@
 {
   "name":"Psikia Hub",
   "short_name":"Psikia Hub",
-  "description":"Asistente móvil para dictado clínico, informes, psicoterapia y terapia grupal.",
+  "description":"Asistente móvil multiusuario para dictado clínico, continuidad asistencial, informes y terapia grupal.",
   "start_url":"./index.html",
   "scope":"./",
   "display":"standalone",

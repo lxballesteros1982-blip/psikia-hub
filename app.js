@@ -8,6 +8,140 @@ const KEY_PAT = 'psikia_v44_patients';
 const KEY_SET = 'psikia_v44_settings';
 const DEFAULT_EMAIL = 'Alejandro.ballesteros.prados@navarra.es';
 
+
+const WORKER_REPORT_TYPE = {
+  ur_initial: 'ingreso_ur',
+  csm_initial: 'primera_csm',
+  evolution: 'evolutivo',
+  pti: 'pti',
+  emergency: 'urgencias'
+};
+
+const WORKER_SECTION_MAP = {
+  ur_initial: {
+    motivo_derivacion: 'Motivo de derivación / ingreso',
+    antecedentes_familiares: 'Antecedentes familiares',
+    situacion_social_laboral_funcional: 'Situación social, laboral y funcional',
+    antecedentes_medicos: 'Antecedentes médicos no psiquiátricos',
+    tratamiento_actual: 'Tratamiento actual',
+    enfermedad_actual_longitudinal: 'Enfermedad actual / evolución longitudinal',
+    exploracion_psicopatologica: 'Exploración psicopatológica',
+    diagnostico_hipotesis: 'Juicio clínico / hipótesis diagnóstica',
+    plan: 'Plan'
+  },
+  csm_initial: {
+    motivo_consulta_procedencia: 'Motivo de consulta / procedencia',
+    antecedentes_medicos: 'Antecedentes médicos no psiquiátricos',
+    antecedentes_psiquiatricos: 'Antecedentes psiquiátricos',
+    antecedentes_familiares: 'Antecedentes familiares',
+    consumo_sustancias: 'Consumo de sustancias',
+    situacion_social_laboral: 'Situación social y laboral',
+    tratamiento_actual: 'Tratamiento actual',
+    enfermedad_actual: 'Enfermedad actual',
+    exploracion_psicopatologica: 'Exploración psicopatológica',
+    orientacion_diagnostica: 'Orientación diagnóstica',
+    plan: 'Plan'
+  },
+  evolution: {
+    resumen_contexto: 'Resumen clínico longitudinal',
+    evolucion_clinica: 'Evolución desde la última revisión',
+    funcionamiento_situacion_psicosocial: 'Funcionamiento / rehabilitación',
+    exploracion_psicopatologica: 'Exploración psicopatológica comparativa',
+    orientacion_diagnostica: 'Juicio clínico'
+  },
+  pti: {
+    resumen_caso: 'Resumen clínico y funcional',
+    necesidades_problemas: 'Necesidades / problemas activos',
+    objetivos_smart: 'Objetivos SMART',
+    intervencion_psiquiatria: 'Intervención de Psiquiatría',
+    intervencion_psicologia: 'Intervención de Psicología',
+    intervencion_enfermeria: 'Intervención de Enfermería',
+    intervencion_terapia_ocupacional: 'Intervención de Terapia Ocupacional',
+    intervencion_trabajo_social: 'Intervención de Trabajo Social',
+    otras_intervenciones: 'Otras intervenciones / coordinación'
+  },
+  emergency: {
+    motivo_consulta: 'Motivo de consulta',
+    antecedentes_relevantes: 'Antecedentes relevantes',
+    situacion_precipitante_enfermedad_actual: 'Situación precipitante / enfermedad actual',
+    informacion_colateral: 'Información colateral relevante',
+    exploracion_psicopatologica: 'Exploración psicopatológica',
+    valoracion_riesgos: 'Valoración de riesgos',
+    valoracion_medico_organica_pruebas: 'Valoración médico-orgánica y pruebas complementarias',
+    juicio_clinico: 'Juicio clínico',
+    intervencion_realizada: 'Intervención realizada',
+    respuesta_evolucion_urgencias: 'Respuesta / evolución durante Urgencias',
+    epicrisis_disposicion: 'Epicrisis y disposición'
+  }
+};
+
+function workerSupportsType(type){
+  return Boolean(WORKER_REPORT_TYPE[type]);
+}
+
+function mergeField(target, value, prefix=''){
+  const v=String(value || '').trim();
+  if(!v) return target || '';
+  const piece=prefix ? `${prefix}${v}` : v;
+  return [target, piece].filter(Boolean).join('\n').trim();
+}
+
+function mapWorkerSections(type, source){
+  const out=Object.fromEntries(templates[type].sections.map(s=>[s,'']));
+  const src=source && typeof source==='object' ? source : {};
+  const map=WORKER_SECTION_MAP[type] || {};
+
+  for(const [key, label] of Object.entries(map)){
+    if(label in out) out[label]=mergeField(out[label], src[key]);
+  }
+
+  // Campos que el Worker separa más que la interfaz actual.
+  if(type==='ur_initial'){
+    out['Antecedentes psiquiátricos y consumo']=mergeField(out['Antecedentes psiquiátricos y consumo'], src.antecedentes_psiquiatricos);
+    out['Antecedentes psiquiátricos y consumo']=mergeField(out['Antecedentes psiquiátricos y consumo'], src.consumo_sustancias, src.consumo_sustancias ? 'Consumo de sustancias: ' : '');
+  }
+
+  if(type==='evolution'){
+    let treatment='';
+    treatment=mergeField(treatment, src.adherencia_tolerabilidad);
+    treatment=mergeField(treatment, src.tratamiento_actual, src.tratamiento_actual ? 'Tratamiento actual: ' : '');
+    out['Adherencia, tolerancia y tratamiento actual']=treatment;
+
+    let plan='';
+    plan=mergeField(plan, src.cambios_tratamiento, src.cambios_tratamiento ? 'Cambios de tratamiento: ' : '');
+    plan=mergeField(plan, src.plan);
+    out['Plan de tratamiento']=plan;
+  }
+
+  if(type==='pti'){
+    let indicators='';
+    indicators=mergeField(indicators, src.indicadores_resultado);
+    indicators=mergeField(indicators, src.frecuencia_seguimiento, src.frecuencia_seguimiento ? 'Frecuencia/seguimiento: ' : '');
+    indicators=mergeField(indicators, src.fecha_revision, src.fecha_revision ? 'Revisión: ' : '');
+    out['Indicadores y revisión']=indicators;
+  }
+
+  return out;
+}
+
+function populateMedicationChanges(changes){
+  const items=Array.isArray(changes) ? changes.slice(0,4) : [];
+  if(!items.length) return;
+  for(let i=1;i<=items.length;i++){
+    const item=items[i-1] || {};
+    const name=$('#medName'+i);
+    const plan=$('#medPlan'+i);
+    if(!name || !plan) continue;
+    name.value=String(item.drug || '').trim();
+    const parts=[];
+    if(item.dose) parts.push(String(item.dose).trim());
+    if(item.schedule) parts.push(String(item.schedule).trim());
+    if(item.route) parts.push('Vía '+String(item.route).trim());
+    if(item.duration_or_change) parts.push(String(item.duration_or_change).trim());
+    plan.value=parts.join(' · ');
+  }
+}
+
 const templates = {
   ur_initial: {
     label: 'Ingreso / valoración inicial UR',
@@ -376,7 +510,7 @@ function saveSettings(){
   $('#workerStatus').textContent='Ajustes guardados.';
   updateEngineStatus();
 }
-function workerEndpoint(){ const base=($('#workerUrl').value||'').trim().replace(/\/+$/,''); return base?base+'/api/note':''; }
+function workerEndpoint(){ const base=($('#workerUrl').value||'').trim().replace(/\/+$/,''); return base||''; }
 function privacyScan(text){
   const hits=[];
   if(/\b\d{8}[A-Z]\b/i.test(text))hits.push('DNI/NIE aparente');
@@ -392,10 +526,17 @@ function updatePrivacyWarning(){
 }
 async function segmentWithWorker(text,type){
   const endpoint=workerEndpoint(); if(!endpoint) throw new Error('WORKER_NOT_CONFIGURED');
-  const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report_type:type,transcript:text})});
+  const reportType=WORKER_REPORT_TYPE[type]; if(!reportType) throw new Error('WORKER_TYPE_NOT_SUPPORTED');
+  const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report_type:reportType,transcript:text})});
   let data={}; try{data=await res.json();}catch(_){throw new Error('Respuesta no JSON del Worker');}
   if(!res.ok || !data.ok) throw new Error(data.error||('HTTP '+res.status));
-  return {sections:data.sections||{},unclassified:Array.isArray(data.unclassified)?data.unclassified:[],engine:'openai',model:data.model||''};
+  return {
+    sections:mapWorkerSections(type,data.sections||{}),
+    unclassified:[],
+    medicationChanges:Array.isArray(data.medication_changes)?data.medication_changes:[],
+    engine:'workers_ai',
+    model:data.model||''
+  };
 }
 async function generate(){
   const text=$('#raw').value.trim(); if(!text){alert('No hay dictado o texto para ordenar.');return;}
@@ -407,16 +548,24 @@ async function generate(){
   const btn=$('#generate'); btn.disabled=true; btn.textContent='Ordenando…';
   let result;
   try{
-    if(workerEndpoint()){
-      $('#engineStatus').textContent='Usando Worker + OpenAI Structured Outputs…';
-      result=await segmentWithWorker(text,$('#visitType').value);
-    } else result=segmentLocal(text,$('#visitType').value);
+    const type=$('#visitType').value;
+    if(workerEndpoint() && workerSupportsType(type)){
+      $('#engineStatus').textContent='Usando Cloudflare Worker + Workers AI…';
+      result=await segmentWithWorker(text,type);
+    } else {
+      result=segmentLocal(text,type);
+      if(workerEndpoint() && !workerSupportsType(type)){
+        $('#engineStatus').textContent='Este tipo de nota aún usa el segmentador local; el Worker no tiene plantilla equivalente.';
+      }
+    }
   }catch(err){
     console.warn('Worker unavailable, local fallback:',err);
     result=segmentLocal(text,$('#visitType').value);
     $('#engineStatus').textContent='El Worker no respondió; he usado el segmentador local. '+(err?.message||'');
   }finally{btn.disabled=false;btn.textContent='✨ Ordenar nota';}
-  reportData=result.sections; unclassified=result.unclassified||[]; renderReport(result.engine,result.model||'');
+  reportData=result.sections; unclassified=result.unclassified||[];
+  populateMedicationChanges(result.medicationChanges||[]);
+  renderReport(result.engine,result.model||'');
 }
 function renderReport(engine='local',model=''){
   const t=currentTemplate(), host=$('#reportSections'); host.innerHTML=''; $('#reportHeading').textContent=t.label;
@@ -427,8 +576,8 @@ function renderReport(engine='local',model=''){
   }
   $$('.reportEdit[data-sec]').forEach(el=>el.addEventListener('input',()=>{reportData[el.dataset.sec]=el.value.trim();}));
   const info=$('#segmentationInfo');
-  if(engine==='openai'){
-    info.className='notice ai'; info.innerHTML='<b>Motor:</b> OpenAI Structured Outputs'+(model?' · '+esc(model):'')+'. Solo reordena el contenido enviado; no añade recomendaciones clínicas bibliográficas.';
+  if(engine==='workers_ai'){
+    info.className='notice ai'; info.innerHTML='<b>Motor:</b> Cloudflare Workers AI'+(model?' · '+esc(model):'')+'. Estructura el dictado y devuelve JSON clínico; no añade recomendaciones bibliográficas.';
   }else{
     info.className='notice ok'; info.innerHTML='<b>Motor local:</b> cada fragmento se asigna a un único destino; lo dudoso queda para revisión.';
   }
@@ -507,11 +656,16 @@ function copyText(t){
 async function testWorker(){
   const base=($('#workerUrl').value||'').trim().replace(/\/+$/,''); const box=$('#workerStatus'); if(!base){box.textContent='No hay URL configurada.';return;}
   box.textContent='Probando…';
-  try{const r=await fetch(base+'/health',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error('HTTP '+r.status);box.innerHTML='<span class="statusDot ok"></span>Worker disponible · RAG '+(d.rag_enabled?'activo':'preparado/no activo')+'.';}
+  try{
+    const r=await fetch(base,{cache:'no-store'});
+    const d=await r.json();
+    if(!r.ok || !d.ok)throw new Error(d.error||('HTTP '+r.status));
+    box.innerHTML='<span class="statusDot ok"></span>Worker disponible · '+esc(d.engine||'Cloudflare Workers AI')+' · binding AI '+(d.ai_binding?'activo':'no detectado')+'.';
+  }
   catch(e){box.innerHTML='<span class="statusDot warn"></span>No se pudo conectar: '+esc(e.message||String(e));}
 }
 function updateEngineStatus(){
-  const s=getSettings(); $('#engineStatus').innerHTML=s.workerUrl?'<span class="statusDot ok"></span>Ordenación: Worker + OpenAI (con fallback local).':'<span class="statusDot warn"></span>Ordenación: segmentador local. Configura el Worker en Ajustes para Structured Outputs.';
+  const s=getSettings(); $('#engineStatus').innerHTML=s.workerUrl?'<span class="statusDot ok"></span>Ordenación: Cloudflare Worker + Workers AI (con fallback local).':'<span class="statusDot warn"></span>Ordenación: segmentador local. Configura el Worker en Ajustes.';
 }
 function loadSettings(){const s=getSettings();$('#emailAddress').value=s.email;$('#workerUrl').value=s.workerUrl;updateEngineStatus();}
 function emailReport(){

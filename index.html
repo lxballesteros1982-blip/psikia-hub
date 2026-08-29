@@ -7,7 +7,7 @@
 <meta name="description" content="Psikia Hub: dictado clínico, estructuración de notas y mini historia local.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<title>Psikia Hub v4.4</title>
+<title>Psikia Hub v4.5</title>
 <style>
 :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b;--ai:#5b3f8c}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{min-height:100vh}
@@ -25,7 +25,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 </style>
 </head>
 <body>
-<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.4</span></div><div class="sub">dictado continuo por pulsación · nota limpia · mini historia · backend OpenAI preparado</div></div></div></header>
+<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.5</span></div><div class="sub">dictado continuo por pulsación · nota limpia · mini historia · Workers AI conectado</div></div></div></header>
 <main>
 <section id="tab-note" class="tab active">
   <div class="card">
@@ -78,9 +78,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 <section id="tab-settings" class="tab">
   <div class="card">
     <div class="eyebrow">Conexión segura</div><h2>Backend</h2>
-    <div class="notice ok"><b>La API key no vive en el navegador.</b> El frontend solo llama a tu Cloudflare Worker. El Worker guarda la clave como secret y llama a OpenAI con <code>store:false</code>.</div>
-    <label>URL del Worker</label><input id="workerUrl" placeholder="https://psikia-api.tu-subdominio.workers.dev">
-    <div class="small" style="margin-top:6px">Déjalo vacío para usar únicamente el segmentador local. Cuando despliegues el Worker, pega aquí su URL una sola vez.</div>
+    <div class="notice ok"><b>La IA no se ejecuta en el navegador.</b> El frontend envía el dictado únicamente a tu Cloudflare Worker, que procesa la estructuración mediante el binding de Workers AI.</div>
+    <label>URL del Worker</label><input id="workerUrl" placeholder="https://psikia-hub-api.lxballesteros1982.workers.dev">
+    <div class="small" style="margin-top:6px">La URL viene preconfigurada. Puedes dejarla vacía si quieres forzar únicamente el segmentador local.</div>
     <button id="testWorker" class="secondary" style="margin-top:8px">Probar conexión</button>
     <div id="workerStatus" class="small" style="margin-top:7px"></div>
   </div>

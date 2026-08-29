@@ -1,4 +1,20 @@
-# Psikia Hub v4.1 · fuentes clínicas + soporte farmacoterapéutico local
+# Psikia Hub v4.5 · Cloudflare Workers AI conectado
+
+PWA clínica local-first, no comercial, para apoyo a documentación clínica. El profesional debe revisar y validar siempre la salida antes de incorporarla a la historia clínica.
+
+## v4.5 · conexión del frontend con el Worker
+
+- Conecta `Ordenar nota` con `https://psikia-hub-api.lxballesteros1982.workers.dev`.
+- El frontend envía `report_type + transcript` al Worker y recibe JSON clínico limpio.
+- Traduce los nombres técnicos de secciones del Worker a los campos visibles de la app.
+- Integra `medication_changes` en las cuatro pautas revisables.
+- El botón `Probar conexión` consulta ahora el endpoint real del Worker.
+- El informe de alta conserva por ahora el segmentador local porque el Worker actual no tiene todavía una plantilla específica de alta.
+- Si el Worker falla, la app mantiene el fallback local.
+- La nota activa sigue sin persistirse; mini historia y ajustes permanecen locales.
+
+
+## Historial previo
 
 PWA clínica local-first, no comercial, para apoyo a documentación clínica. El profesional debe revisar y validar siempre la salida antes de incorporarla a la historia clínica.
 

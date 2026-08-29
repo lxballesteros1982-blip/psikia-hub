@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#173d5b">
-<link rel="manifest" href="manifest.webmanifest">
-<title>Psikia Hub v2.5</title>
+<link rel="manifest" href="./manifest.webmanifest?v=26">
+<title>Psikia Hub v2.6</title>
 <style>
 :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -14,14 +14,14 @@ main{max-width:920px;margin:auto;padding:10px 10px 104px}.tab{display:none}.tab.
 label{display:block;font-size:12px;font-weight:780;color:#344b5c;margin:9px 0 5px}input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid #c7d5dc;border-radius:11px;padding:10px 11px}textarea{min-height:190px;resize:vertical;line-height:1.48}.mini{min-height:68px}.two{display:grid;grid-template-columns:1fr;gap:8px}.codeRow{display:grid;grid-template-columns:96px 1fr;gap:8px}.row{display:flex;gap:7px;flex-wrap:wrap}.row>*{flex:1}
 button{border:0;border-radius:11px;padding:10px 12px;min-height:44px;font-weight:780;font-size:14px;background:var(--primary);color:#fff;cursor:pointer;touch-action:manipulation}button.secondary{background:var(--soft);border:1px solid #cadde7;color:var(--primary)}button.ghost{background:#fff;border:1px solid var(--line);color:var(--primary)}button.danger{background:#fff0f0;border:1px solid #efcaca;color:var(--danger)}
 .mic{width:100%;min-height:66px;font-size:17px;background:linear-gradient(135deg,#1b4c6d,#217392);user-select:none;-webkit-user-select:none}.mic.listening{background:linear-gradient(135deg,#8c3434,#b64b4b);transform:scale(.995)}.notice{padding:9px 10px;border-radius:10px;font-size:12px;line-height:1.4;margin:8px 0}.notice.info{background:#eef6fa;border:1px solid #c7dfe9;color:#245871}.notice.ok{background:#edf8f3;border:1px solid #b7dfcf;color:#165b46}.notice.warn{background:#fff7e7;border:1px solid #ead6a8;color:#76520d}
-.reportSection{border-top:1px solid var(--line);padding:11px 0}.reportSection:first-child{border-top:0}.reportTitle{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase}.reportText{font-size:14px;line-height:1.5;white-space:pre-wrap;outline:none;border-radius:7px;padding:5px;min-height:40px}.reportText:focus{box-shadow:0 0 0 2px #b9d8e7}.singleEmergency{min-height:460px}
+.reportSection{border-top:1px solid var(--line);padding:11px 0}.reportSection:first-child{border-top:0}.reportTitle{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase}.reportText{font-size:14px;line-height:1.5;white-space:pre-wrap;outline:none;border-radius:7px;padding:5px;min-height:40px}.reportText:focus{box-shadow:0 0 0 2px #b9d8e7}.reportEdit{min-height:96px;font-size:15px;line-height:1.48;margin-top:6px}.singleEmergency{min-height:460px}
 .contextBox{border:1px solid #d5e3ea;background:#f8fbfd;border-radius:11px;padding:9px;margin-top:8px;white-space:pre-wrap}.patientCard{border:1px solid var(--line);border-radius:14px;background:#fff;margin:8px 0;overflow:hidden}.patientTop{padding:11px 12px;display:flex;justify-content:space-between;gap:9px}.patientCode{font-size:18px;font-weight:900;color:var(--primary)}.patientDx{font-size:12px;color:#3c5667}.badge{font-size:10px;border-radius:999px;padding:4px 7px;background:var(--soft);color:var(--primary);white-space:nowrap}.entry{border-top:1px solid var(--line);padding:10px 12px}.entryMeta{font-size:10px;color:var(--muted);margin-bottom:4px}.entrySummary{font-size:12px;line-height:1.42}.medGrid{display:grid;grid-template-columns:1fr;gap:8px}.medSlot{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fcfdfe}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}nav button{background:transparent;color:#60717c;padding:4px 2px;min-height:56px;font-size:10px;border-radius:9px}nav button.active{background:var(--soft);color:var(--primary)}nav .ico{display:block;font-size:20px;margin-bottom:2px}
 @media(min-width:680px){.two{grid-template-columns:1fr 1fr}.medGrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.75">v2.5</span></div><div class="sub">dictado lógico continuo · segmentación por contexto · borrador persistente</div></div></div></header>
+<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.75">v2.6</span></div><div class="sub">dictado por pulsación · campos clínicos separados · sin arrastre de borrador</div></div></div></header>
 <main>
 <section id="tab-note" class="tab active">
   <div class="card">
@@ -35,9 +35,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 
   <div class="card">
     <h2>Dictado / texto fuente</h2>
-    <button id="dictate" class="mic">🎙️ Mantén pulsado para hablar</button>
-    <div id="dictationStatus" class="notice info">Mantén pulsado mientras hablas y suelta para parar. Si Android cierra internamente el reconocimiento por una pausa larga, la app lo reabre mientras sigas pulsando y mantiene una sola sesión lógica sin cambiar el estado del botón.</div>
-    <textarea id="raw" placeholder="Dicta de forma natural. El borrador se guarda automáticamente en este dispositivo."></textarea>
+    <button id="dictate" class="mic">🎙️ Pulsar para hablar</button>
+    <div id="dictationStatus" class="notice info">Una pulsación inicia el dictado y otra lo detiene. Esta versión NO reinicia automáticamente el reconocimiento cuando Android lo corta por silencio, para evitar los blips repetidos.</div>
+    <textarea id="raw" placeholder="Dicta de forma natural. Cada bloque reconocido se separa para evitar ristras largas. El borrador activo no se conserva al cerrar la app."></textarea>
     <div class="row" style="margin-top:8px"><button id="generate">Ordenar nota</button><button id="clearRaw" class="ghost">Borrar dictado</button><button id="newNote" class="secondary">Nueva nota</button></div>
   </div>
 
@@ -63,7 +63,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 
 <section id="tab-settings" class="tab">
   <div class="card"><h2>Ajustes</h2><label>Correo profesional</label><input id="emailAddress" type="email" value="Alejandro.ballesteros.prados@navarra.es"><button id="saveSettings" style="margin-top:8px">Guardar ajustes</button></div>
-  <div class="card"><h2>Persistencia</h2><div class="notice ok"><b>Borrador autosalvado:</b> paciente, contexto, dictado e informe se conservan al cerrar/reabrir. “Nueva nota” sí limpia el borrador, pero nunca borra la mini historia.</div><button id="discardDraft" class="danger">Descartar borrador activo</button></div>
+  <div class="card"><h2>Persistencia</h2><div class="notice ok"><b>Sin arrastre de borrador:</b> al abrir la app se inicia una nota vacía. Solo la mini historia guardada explícitamente y los ajustes permanecen en el dispositivo.</div><button id="discardDraft" class="danger">Limpiar nota actual</button></div>
 </section>
 </main>
 <nav><button data-tab="note" class="active"><span class="ico">📝</span>Nota</button><button data-tab="patients"><span class="ico">👥</span>Pacientes</button><button data-tab="settings"><span class="ico">⚙️</span>Ajustes</button></nav>
@@ -72,7 +72,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-const KEY_DRAFT='psikia_v25_draft', KEY_PAT='psikia_patients', KEY_SET='psikia_settings';
+const KEY_PAT='psikia_patients', KEY_SET='psikia_settings';
 const templates={
  initial:{label:'Valoración inicial / ingreso',sections:['Motivo de consulta / derivación','Antecedentes médicos / alergias','Antecedentes psiquiátricos personales','Antecedentes familiares psiquiátricos','Consumo de sustancias','Situación personal, social y funcional','Tratamiento actual','Enfermedad actual / evolución longitudinal','Exploración psicopatológica','Valoración de riesgos','Pruebas complementarias','Juicio clínico / diagnóstico','Plan']},
  evolution:{label:'Evolutivo / seguimiento',sections:['Resumen clínico longitudinal','Evolución desde la última revisión','Funcionamiento / rehabilitación','Adherencia, tolerancia y tratamiento actual','Exploración psicopatológica comparativa','Valoración de riesgos','Pruebas / incidencias clínicas','Juicio clínico','Plan de tratamiento','Próxima revisión / coordinación']},
@@ -94,84 +94,208 @@ const cueMap={
  'Evolución durante el ingreso':['evolucion','durante el ingreso','progresivamente','mejoria','respuesta','estabiliza'], 'Intervenciones realizadas':['intervencion','se realiza','tratamiento','psicoeduc','coordinacion'], 'Tratamiento al alta':['tratamiento al alta','pauta al alta','mg','mantener','retirar','iniciar'], 'Situación funcional al alta':['funcional','autocuidado','avd','laboral','social','al alta','autonomia'], 'Epicrisis':['epicrisis','resumen final','en conjunto','tras evolucion'], 'Plan de seguimiento':['seguimiento','cita','recurso','centro de salud mental','derivacion','revision'],
  'Situación precipitante / enfermedad actual':['precipitante','desencaden','tras','despues de','desde hace','hoy','ayer','ultimas horas','actualmente','empeoramiento','crisis','agudizacion'], 'Información colateral relevante':['informacion colateral','segun familia','refiere la familia','madre refiere','padre refiere','pareja refiere','policia refiere','acompañante','se contacta con'], 'Intervención realizada':['se administra','administramos','contencion','desescalada','reduccion de estimulos','observacion','medidas de seguridad','se realiza','se contacta'], 'Respuesta / evolución durante Urgencias':['durante urgencias','tras la administracion','posteriormente','evoluciona','se calma','cede','persiste','respuesta','reevaluacion'], 'Epicrisis y disposición':['epicrisis','alta a domicilio','alta domiciliaria','se decide ingreso','ingreso en','observacion','derivacion','acompañado','seguimiento','disposicion']
 };
-let reportData={}, recognition=null, wantListening=false, manualStop=false, restarting=false, finalBuffer='';
-function splitClinical(text){
- let s=String(text||'').replace(/\s+/g,' ').trim(); if(!s)return [];
- s=s.replace(/\b(motivo de consulta|antecedentes(?: relevantes| psiquiatricos| medicos| familiares)?|consumo de sustancias|situacion social|tratamiento actual|enfermedad actual|exploracion psicopatologica|valoracion de riesgos|pruebas complementarias|juicio clinico|intervencion realizada|epicrisis|plan)\b\s*[:,-]?/gi,'|$1: ');
- return s.split(/\|+/).flatMap(x=>x.split(/(?<=[.!?;])\s+(?=[A-ZÁÉÍÓÚÑ])/)).map(x=>x.trim()).filter(Boolean);
+let reportData={}, recognition=null, listening=false, requestedListening=false;
+function spokenPunctuation(text){
+ let x=String(text||'').trim();
+ x=x.replace(/\b(nuevo parrafo|nuevo párrafo|punto y aparte)\b/gi,'\n');
+ x=x.replace(/\b(punto y seguido|punto)\b/gi,'. ');
+ x=x.replace(/\b(coma)\b/gi,', ');
+ x=x.replace(/\b(punto y coma)\b/gi,'; ');
+ x=x.replace(/\s+([,.;:])/g,'$1').replace(/[ \t]+/g,' ').replace(/\n +/g,'\n').trim();
+ return x;
 }
-function routeChunk(chunk,sections,index){
- const n=norm(chunk); let best=sections[0],score=-1;
- for(const sec of sections){let sc=0; for(const cue of cueMap[sec]||[]){if(n.includes(norm(cue)))sc+=cue.includes(' ')?3:1}
-   if(index===0 && /motivo|consulta por|acude por|derivad/.test(n) && /motivo/.test(norm(sec)))sc+=8;
-   if(/suicid|autoles|heteroagres|violenc|arma|protector/.test(n)&&/riesgo/.test(norm(sec)))sc+=7;
-   if(/delir|alucin|orientad|discurso|afecto|psicomot|insight/.test(n)&&/exploracion/.test(norm(sec)))sc+=6;
-   if(/analit|ecg|toxic|glucemia|constantes|tac|resonancia/.test(n)&&/(pruebas|organica|incidencias)/.test(norm(sec)))sc+=6;
-   if(/diagnost|compatible con|sindrome|diferencial/.test(n)&&/(juicio|diagnostico)/.test(norm(sec)))sc+=6;
+const headingAliases={
+ initial:{
+  'Motivo de consulta / derivación':['motivo de consulta','motivo de derivacion','motivo de derivación','derivacion','derivación'],
+  'Antecedentes médicos / alergias':['antecedentes medicos','antecedentes médicos','alergias','antecedentes somaticos','antecedentes somáticos'],
+  'Antecedentes psiquiátricos personales':['antecedentes psiquiatricos','antecedentes psiquiátricos','antecedentes personales psiquiatricos','antecedentes personales psiquiátricos'],
+  'Antecedentes familiares psiquiátricos':['antecedentes familiares','antecedentes familiares psiquiatricos','antecedentes familiares psiquiátricos'],
+  'Consumo de sustancias':['consumo de sustancias','toxicos','tóxicos','habitos toxicos','hábitos tóxicos'],
+  'Situación personal, social y funcional':['situacion social','situación social','situacion personal','situación personal','situacion funcional','situación funcional'],
+  'Tratamiento actual':['tratamiento actual','tratamiento habitual','medicacion actual','medicación actual'],
+  'Enfermedad actual / evolución longitudinal':['enfermedad actual','evolucion longitudinal','evolución longitudinal','situacion actual','situación actual'],
+  'Exploración psicopatológica':['exploracion psicopatologica','exploración psicopatológica','examen mental'],
+  'Valoración de riesgos':['valoracion de riesgos','valoración de riesgos','riesgo suicida','riesgo heteroagresivo'],
+  'Pruebas complementarias':['pruebas complementarias','exploraciones complementarias'],
+  'Juicio clínico / diagnóstico':['juicio clinico','juicio clínico','orientacion diagnostica','orientación diagnóstica','diagnostico','diagnóstico'],
+  'Plan':['plan','conducta','plan terapeutico','plan terapéutico']
+ },
+ evolution:{
+  'Resumen clínico longitudinal':['resumen clinico','resumen clínico','resumen longitudinal'],
+  'Evolución desde la última revisión':['evolucion','evolución','desde la ultima revision','desde la última revisión'],
+  'Funcionamiento / rehabilitación':['funcionamiento','rehabilitacion','rehabilitación'],
+  'Adherencia, tolerancia y tratamiento actual':['tratamiento actual','adherencia','tolerancia'],
+  'Exploración psicopatológica comparativa':['exploracion psicopatologica','exploración psicopatológica','examen mental'],
+  'Valoración de riesgos':['valoracion de riesgos','valoración de riesgos','riesgo suicida'],
+  'Pruebas / incidencias clínicas':['pruebas','incidencias clinicas','incidencias clínicas'],
+  'Juicio clínico':['juicio clinico','juicio clínico','diagnostico','diagnóstico'],
+  'Plan de tratamiento':['plan de tratamiento','plan terapeutico','plan terapéutico'],
+  'Próxima revisión / coordinación':['proxima revision','próxima revisión','coordinacion','coordinación','seguimiento']
+ },
+ pti:{
+  'Resumen clínico y funcional':['resumen clinico','resumen clínico','resumen funcional'],
+  'Necesidades / problemas activos':['necesidades','problemas activos'],
+  'Riesgos y factores protectores':['riesgos','factores protectores'],
+  'Objetivos SMART':['objetivos','objetivos smart'],
+  'Intervención de Psiquiatría':['intervencion de psiquiatria','intervención de psiquiatría','psiquiatria','psiquiatría'],
+  'Intervención de Psicología':['intervencion de psicologia','intervención de psicología','psicologia','psicología'],
+  'Intervención de Enfermería':['intervencion de enfermeria','intervención de enfermería','enfermeria','enfermería'],
+  'Intervención de Terapia Ocupacional':['terapia ocupacional'],
+  'Intervención de Trabajo Social':['trabajo social'],
+  'Otras intervenciones / coordinación':['otras intervenciones','coordinacion','coordinación'],
+  'Indicadores y revisión':['indicadores','revision','revisión']
+ },
+ discharge:{
+  'Motivo y contexto del ingreso':['motivo del ingreso','contexto del ingreso'],
+  'Antecedentes relevantes':['antecedentes relevantes','antecedentes'],
+  'Evolución durante el ingreso':['evolucion durante el ingreso','evolución durante el ingreso'],
+  'Intervenciones realizadas':['intervenciones realizadas','intervencion realizada','intervención realizada'],
+  'Exploración psicopatológica al alta':['exploracion psicopatologica al alta','exploración psicopatológica al alta'],
+  'Valoración de riesgos al alta':['riesgos al alta','valoracion de riesgos al alta','valoración de riesgos al alta'],
+  'Pruebas complementarias relevantes':['pruebas complementarias'],
+  'Diagnóstico al alta':['diagnostico al alta','diagnóstico al alta'],
+  'Tratamiento al alta':['tratamiento al alta'],
+  'Situación funcional al alta':['situacion funcional al alta','situación funcional al alta'],
+  'Epicrisis':['epicrisis'],
+  'Plan de seguimiento':['plan de seguimiento','seguimiento']
+ },
+ emergency:{
+  'Motivo de consulta':['motivo de consulta'],
+  'Antecedentes relevantes':['antecedentes relevantes','antecedentes'],
+  'Situación precipitante / enfermedad actual':['situacion precipitante','situación precipitante','enfermedad actual'],
+  'Información colateral relevante':['informacion colateral','información colateral'],
+  'Exploración psicopatológica':['exploracion psicopatologica','exploración psicopatológica','examen mental'],
+  'Valoración de riesgos':['valoracion de riesgos','valoración de riesgos','riesgo suicida','riesgo heteroagresivo'],
+  'Valoración médico-orgánica y pruebas complementarias':['valoracion medico organica','valoración médico orgánica','pruebas complementarias','exploracion fisica','exploración física'],
+  'Juicio clínico':['juicio clinico','juicio clínico','diagnostico','diagnóstico'],
+  'Intervención realizada':['intervencion realizada','intervención realizada'],
+  'Respuesta / evolución durante Urgencias':['evolucion en urgencias','evolución en urgencias','respuesta en urgencias','reevaluacion','reevaluación'],
+  'Epicrisis y disposición':['epicrisis','disposicion','disposición','alta','ingreso']
+ }
+};
+function splitClinical(text,type){
+ let s=spokenPunctuation(text).replace(/\r/g,'\n').trim(); if(!s)return [];
+ const aliases=headingAliases[type]||{};
+ const all=[];
+ for(const [sec,arr] of Object.entries(aliases))for(const a of arr)all.push([a,sec]);
+ all.sort((a,b)=>b[0].length-a[0].length);
+ // Turn explicitly spoken headings into hard boundaries without consuming clinical text after them.
+ for(const [alias,sec] of all){
+   const escaped=alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+   const re=new RegExp(`(^|[\\n.;])\\s*(?:como\\s+)?${escaped}\\s*[:,-]?\\s*`,'gi');
+   s=s.replace(re,(m,p1)=>`${p1}\n§${sec}§ `);
+ }
+ // Sentence/block boundaries. Final speech chunks already receive punctuation, so this stays stable on Android.
+ const raw=s.split(/\n+|(?<=[.!?;])\s+/).map(x=>x.trim()).filter(Boolean);
+ const out=[];
+ for(const block of raw){
+   const m=block.match(/^§(.+?)§\s*(.*)$/s);
+   if(m)out.push({forced:m[1],text:m[2].trim()}); else out.push({forced:null,text:block});
+ }
+ return out.filter(x=>x.text||x.forced);
+}
+function routeChunk(chunk,sections,index,previous,type){
+ const n=norm(chunk); let best=null,score=0;
+ for(const sec of sections){let sc=0; for(const cue of cueMap[sec]||[]){if(n.includes(norm(cue)))sc+=cue.includes(' ')?4:1}
+   const sn=norm(sec);
+   if(/suicid|autoles|heteroagres|violenc|arma|protector|fuga/.test(n)&&/riesgo/.test(sn))sc+=10;
+   if(/delir|alucin|orientad|discurso|afecto|psicomot|insight|concien|colaborador|eutim|hipotim/.test(n)&&/exploracion/.test(sn))sc+=8;
+   if(/analit|ecg|electrocard|toxic|glucemia|constantes|tac|resonancia|orina/.test(n)&&/(pruebas|organica|incidencias)/.test(sn))sc+=8;
+   if(/diagnost|compatible con|sindrome|diferencial|impresion clinica/.test(n)&&/(juicio|diagnostico)/.test(sn))sc+=8;
+   if(/mg\b|miligr|pauta|medicacion|tratamiento habitual|toma\b|depot|inyectable/.test(n)&&/(tratamiento actual|adherencia|tratamiento al alta)/.test(sn))sc+=7;
+   if(/cannabis|cocaina|alcohol|heroina|opio|anfet|tabaco|toxic/.test(n)&&/consumo/.test(sn))sc+=9;
+   if(/convive|vive con|trabaja|laboral|pension|incapacidad|hijos|pareja|vivienda|avd|autocuidado/.test(n)&&/(social|funcional|funcionamiento)/.test(sn))sc+=7;
    if(sc>score){score=sc;best=sec}
  }
- return {section:best,score};
+ if(best&&score>=3)return {section:best,score};
+ // No zero-score fall-through to the first field: keep narrative continuity instead.
+ if(previous)return {section:previous,score:0};
+ if(type==='initial')return {section:sections[0],score:0};
+ if(type==='emergency')return {section:sections[0],score:0};
+ return {section:sections[0],score:0};
 }
 function segmentText(text,type){
- const t=templates[type], chunks=splitClinical(text), out={}; t.sections.forEach(s=>out[s]=[]);
- chunks.forEach((c,i)=>{const r=routeChunk(c,t.sections,i); out[r.section].push(c)});
- return Object.fromEntries(t.sections.map(s=>[s,out[s].join(' ').trim()]));
+ const t=templates[type], chunks=splitClinical(text,type), out={}; t.sections.forEach(s=>out[s]=[]);
+ let previous=null;
+ chunks.forEach((obj,i)=>{
+   if(obj.forced&&out[obj.forced]!==undefined){previous=obj.forced;if(obj.text)out[previous].push(obj.text);return}
+   if(!obj.text)return;
+   const r=routeChunk(obj.text,t.sections,i,previous,type); previous=r.section; out[r.section].push(obj.text);
+ });
+ return Object.fromEntries(t.sections.map(s=>[s,out[s].join(' ').replace(/\s+([,.;:])/g,'$1').trim()]));
 }
 function renderReport(){
  const type=$('#visitType').value, t=templates[type], host=$('#reportSections'); host.innerHTML=''; $('#reportHeading').textContent=t.label;
- if(type==='emergency'){
-   let txt=t.sections.map(s=>reportData[s]?`${s.toUpperCase()}\n${reportData[s]}`:'').filter(Boolean).join('\n\n');
-   host.innerHTML=`<div class="reportTitle">Informe de Urgencias · campo único</div><div id="emergencySingle" class="reportText singleEmergency" contenteditable="true">${esc(txt)}</div>`;
-   $('#segmentationInfo').innerHTML='Urgencias se entrega en <b>un solo campo editable</b>, pero el contenido se ordena internamente por apartados para evitar que todo caiga accidentalmente en una subsección.';
-   $('#emergencySingle').addEventListener('input',()=>saveDraft());
- } else {
-   for(const s of t.sections){const div=document.createElement('div');div.className='reportSection';div.innerHTML=`<div class="reportTitle">${esc(s)}</div><div class="reportText" data-sec="${esc(s)}" contenteditable="true">${esc(reportData[s]||'')}</div>`;host.appendChild(div)}
-   $$('.reportText[data-sec]').forEach(el=>el.addEventListener('input',()=>{reportData[el.dataset.sec]=el.innerText.trim();saveDraft()}));
-   $('#segmentationInfo').textContent='Segmentación automática específica del contexto. Todos los campos siguen siendo editables antes de copiar o guardar.';
+ for(const sec of t.sections){
+   const wrap=document.createElement('div');wrap.className='reportSection';
+   wrap.innerHTML=`<div class="reportTitle">${esc(sec)}</div><textarea class="reportEdit" data-sec="${esc(sec)}" placeholder="${esc(sec)}">${esc(reportData[sec]||'')}</textarea>`;
+   host.appendChild(wrap);
  }
- $('#reportCard').hidden=false; saveDraft();
+ $$('.reportEdit[data-sec]').forEach(el=>el.addEventListener('input',()=>{reportData[el.dataset.sec]=el.value.trim()}));
+ $('#segmentationInfo').textContent='Campos separados según el contexto seleccionado. El texto no coincidente ya no cae por defecto en el primer campo: conserva continuidad con el apartado clínico anterior.';
+ $('#reportCard').hidden=false;
 }
 function collectReportText(){
  const type=$('#visitType').value;
- if(type==='emergency'){return ($('#emergencySingle')?.innerText||'').trim()}
  return templates[type].sections.map(s=>{const v=(reportData[s]||'').trim();return v?`${s.toUpperCase()}\n${v}`:''}).filter(Boolean).join('\n\n');
 }
 function generate(){reportData=segmentText($('#raw').value,$('#visitType').value);renderReport()}
+function cleanSpeechChunk(txt){
+ let x=spokenPunctuation(txt); if(!x)return '';
+ x=x.charAt(0).toUpperCase()+x.slice(1);
+ if(!/[.!?…]$/.test(x))x+='.';
+ return x;
+}
+function mergeWithoutEcho(existing,incoming){
+ const a=String(existing||'').trim(), b=String(incoming||'').trim(); if(!a)return b; if(!b)return a;
+ const na=norm(a), nb=norm(b); if(na.endsWith(nb)||na.includes(nb)&&nb.length>24)return a;
+ const aw=a.split(/\s+/), bw=b.split(/\s+/); let overlap=0;
+ for(let k=Math.min(12,aw.length,bw.length);k>=2;k--){if(norm(aw.slice(-k).join(' '))===norm(bw.slice(0,k).join(' '))){overlap=k;break}}
+ const tail=bw.slice(overlap).join(' '); return tail?`${a}\n${tail}`:a;
+}
 function addTranscript(txt){
- txt=String(txt||'').trim(); if(!txt)return; const raw=$('#raw'); const nOld=norm(raw.value.slice(-220)), nNew=norm(txt);
- if(nOld.includes(nNew))return; raw.value=(raw.value.trim()?raw.value.trim()+' ':'')+txt; saveDraft();
+ const chunk=cleanSpeechChunk(txt); if(!chunk)return; const raw=$('#raw'); raw.value=mergeWithoutEcho(raw.value,chunk);
+ raw.scrollTop=raw.scrollHeight;
 }
 function setupRecognition(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return null;
  const r=new SR(); r.lang='es-ES'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
- r.onresult=e=>{let fin=''; for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript+' '} if(fin)addTranscript(fin)};
- r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){wantListening=false;setMic(false,'Permiso de micrófono denegado.')} };
- r.onend=()=>{ if(wantListening&&!manualStop){restarting=true;setTimeout(()=>{try{r.start();restarting=false}catch(_){setTimeout(()=>{if(wantListening)try{r.start()}catch(__){}},350)}},140)} else setMic(false); };
+ r.onstart=()=>{listening=true;setMic(true,'Dictando. Pulsa otra vez para detener.')};
+ r.onresult=e=>{let fin='',interim=''; for(let i=e.resultIndex;i<e.results.length;i++){const tx=e.results[i][0].transcript||''; if(e.results[i].isFinal)fin+=tx+' '; else interim+=tx} if(fin)addTranscript(fin); if(interim)$('#dictationStatus').textContent='Escuchando: '+interim.slice(-90)};
+ r.onerror=e=>{
+   if(e.error==='not-allowed'||e.error==='service-not-allowed'){listening=false;requestedListening=false;setMic(false,'Permiso de micrófono denegado.')} 
+   else if(e.error!=='no-speech'&&e.error!=='aborted'){$('#dictationStatus').textContent='Dictado detenido: '+e.error+'. Pulsa para continuar.'}
+ };
+ r.onend=()=>{
+   const wasRequested=requestedListening; listening=false; requestedListening=false; setMic(false);
+   if(wasRequested)$('#dictationStatus').textContent='Android cerró el reconocimiento tras una pausa. No lo reinicio automáticamente para evitar blips: pulsa una vez para continuar.';
+ };
  return r;
 }
-function setMic(on,msg){const b=$('#dictate'); b.classList.toggle('listening',on); b.textContent=on?'🔴 Hablando… suelta para parar':'🎙️ Mantén pulsado para hablar'; if(msg)$('#dictationStatus').textContent=msg;}
-function startDictation(e){e?.preventDefault(); if(wantListening)return; recognition=recognition||setupRecognition(); if(!recognition){$('#dictationStatus').textContent='Este navegador no ofrece reconocimiento de voz Web Speech. Puedes seguir escribiendo o pegar texto.';return} manualStop=false;wantListening=true;setMic(true);try{recognition.start()}catch(_){} }
-function stopDictation(e){e?.preventDefault(); if(!wantListening)return; manualStop=true;wantListening=false;try{recognition.stop()}catch(_){} setMic(false);saveDraft();}
-function draftPayload(){return {patientCode:$('#patientCode').value,diagnosis:$('#diagnosis').value,visitType:$('#visitType').value,raw:$('#raw').value,reportData,emergencySingle:$('#emergencySingle')?.innerText||'',savedAt:Date.now()}}
-function saveDraft(){localStorage.setItem(KEY_DRAFT,JSON.stringify(draftPayload()))}
-function loadDraft(){try{const d=JSON.parse(localStorage.getItem(KEY_DRAFT)||'null'); if(!d)return; $('#patientCode').value=d.patientCode||'';$('#diagnosis').value=d.diagnosis||'';$('#visitType').value=d.visitType||'initial';$('#raw').value=d.raw||'';reportData=d.reportData||{}; if(Object.values(reportData).some(Boolean)){renderReport(); if(d.visitType==='emergency'&&d.emergencySingle&&$('#emergencySingle'))$('#emergencySingle').innerText=d.emergencySingle;} updatePatientContext();}catch(_){}}
-function clearDraft(confirmIt=true){if(confirmIt&&!confirm('¿Iniciar una nota nueva? Se limpiará el borrador activo, pero no la mini historia.'))return; manualStop=true;wantListening=false;try{recognition?.stop()}catch(_){}; localStorage.removeItem(KEY_DRAFT);$('#patientCode').value='';$('#diagnosis').value='';$('#raw').value='';reportData={};$('#reportCard').hidden=true;$('#reportSections').innerHTML='';updatePatientContext();}
+function setMic(on,msg){const b=$('#dictate'); b.classList.toggle('listening',on); b.textContent=on?'⏹️ Pulsar para detener':'🎙️ Pulsar para hablar'; if(msg)$('#dictationStatus').textContent=msg;}
+function toggleDictation(e){e?.preventDefault(); recognition=recognition||setupRecognition(); if(!recognition){$('#dictationStatus').textContent='Este navegador no ofrece reconocimiento de voz Web Speech. Puedes seguir escribiendo o pegar texto.';return}
+ if(listening||requestedListening){requestedListening=false;try{recognition.stop()}catch(_){};setMic(false,'Dictado detenido.');return}
+ requestedListening=true;try{recognition.start()}catch(_){requestedListening=false;$('#dictationStatus').textContent='No se pudo iniciar el reconocimiento. Pulsa de nuevo.'}
+}
+function clearCurrentNote(confirmIt=true){if(confirmIt&&!confirm('¿Limpiar la nota actual? La mini historia guardada no se borra.'))return;requestedListening=false;listening=false;try{recognition?.abort()}catch(_){};$('#patientCode').value='';$('#diagnosis').value='';$('#raw').value='';reportData={};$('#reportCard').hidden=true;$('#reportSections').innerHTML='';for(let i=1;i<=4;i++){const a=$('#medName'+i),b=$('#medPlan'+i);if(a)a.value='';if(b)b.value=''}updatePatientContext();}
 function getPatients(){try{return JSON.parse(localStorage.getItem(KEY_PAT)||'{}')}catch(_){return {}}} function setPatients(x){localStorage.setItem(KEY_PAT,JSON.stringify(x))}
 function savePatientEntry(){const code=$('#patientCode').value.trim().toUpperCase(); if(!code){alert('Añade al menos una inicial/código de paciente.');return} const dx=$('#diagnosis').value.trim(), text=collectReportText()||$('#raw').value.trim(); if(!text){alert('No hay contenido que guardar.');return} const p=getPatients(); if(!p[code])p[code]={diagnosis:dx,entries:[]}; if(dx)p[code].diagnosis=dx; p[code].entries.unshift({date:new Date().toISOString(),type:templates[$('#visitType').value].label,summary:text.replace(/\s+/g,' ').slice(0,280),text}); setPatients(p);renderPatients();updatePatientContext();alert('Evolución guardada en la mini historia.');}
 function renderPatients(){const q=norm($('#patientFilter').value), p=getPatients(), host=$('#patientList');host.innerHTML=''; const arr=Object.entries(p).filter(([c,v])=>!q||norm(c+' '+(v.diagnosis||'')).includes(q)).sort((a,b)=>(b[1].entries?.[0]?.date||'').localeCompare(a[1].entries?.[0]?.date||'')); if(!arr.length){host.innerHTML='<div class="card small">No hay pacientes guardados.</div>';return} for(const [code,v] of arr){const card=document.createElement('div');card.className='patientCard';card.innerHTML=`<div class="patientTop"><div><div class="patientCode">${esc(code)}</div><div class="patientDx">${esc(v.diagnosis||'Sin diagnóstico de presunción')}</div></div><span class="badge">${v.entries?.length||0} entradas</span></div><div class="row" style="padding:0 12px 10px"><button class="secondary openPat" data-code="${esc(code)}">Abrir paciente</button><button class="ghost newPat" data-code="${esc(code)}">Nueva nota</button></div>${(v.entries||[]).slice(0,6).map(e=>`<div class="entry"><div class="entryMeta">${new Date(e.date).toLocaleString('es-ES')} · ${esc(e.type)}</div><div class="entrySummary">${esc(e.summary)}</div></div>`).join('')}`;host.appendChild(card)}
- $$('.openPat').forEach(b=>b.onclick=()=>{const code=b.dataset.code,v=p[code];$('#patientCode').value=code;$('#diagnosis').value=v.diagnosis||'';updatePatientContext();saveDraft();showTab('note')});
- $$('.newPat').forEach(b=>b.onclick=()=>{const code=b.dataset.code,v=p[code];clearDraft(false);$('#patientCode').value=code;$('#diagnosis').value=v.diagnosis||'';saveDraft();updatePatientContext();showTab('note')}); }
+ $$('.openPat').forEach(b=>b.onclick=()=>{const code=b.dataset.code,v=p[code];$('#patientCode').value=code;$('#diagnosis').value=v.diagnosis||'';updatePatientContext();showTab('note')});
+ $$('.newPat').forEach(b=>b.onclick=()=>{const code=b.dataset.code,v=p[code];clearCurrentNote(false);$('#patientCode').value=code;$('#diagnosis').value=v.diagnosis||'';updatePatientContext();showTab('note')}); }
 function updatePatientContext(){const code=$('#patientCode').value.trim().toUpperCase(), p=getPatients()[code], box=$('#patientContext'); if(!p){box.textContent='Sin contexto longitudinal seleccionado.';return} const last=(p.entries||[])[0]; box.textContent=`${code} · ${p.diagnosis||'sin diagnóstico'} · ${(p.entries||[]).length} entradas${last?`\nÚltima: ${new Date(last.date).toLocaleDateString('es-ES')} · ${last.type}\n${last.summary}`:''}`;}
 function showTab(name){$$('.tab').forEach(x=>x.classList.remove('active'));$('#tab-'+name).classList.add('active');$$('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));if(name==='patients')renderPatients()}
 function initMeds(){const host=$('#medGrid'); for(let i=1;i<=4;i++){const d=document.createElement('div');d.className='medSlot';d.innerHTML=`<b>Cambio ${i}</b><label>Fármaco</label><input id="medName${i}" placeholder="Fármaco"><label>Pauta concreta</label><textarea id="medPlan${i}" class="mini" placeholder="Dosis, pauta, vía si procede, duración/cambio programado"></textarea>`;host.appendChild(d)}}
 function applyMeds(){const lines=[];for(let i=1;i<=4;i++){const n=$('#medName'+i).value.trim(),p=$('#medPlan'+i).value.trim();if(n||p)lines.push((n?n+': ':'')+p)} if(!lines.length)return; const type=$('#visitType').value; if(!Object.keys(reportData).length)reportData=segmentText($('#raw').value,type); let target=type==='emergency'?'Epicrisis y disposición':type==='discharge'?'Tratamiento al alta':type==='evolution'?'Plan de tratamiento':type==='pti'?'Intervención de Psiquiatría':'Plan'; reportData[target]=[reportData[target],...lines].filter(Boolean).join('\n');renderReport();}
 function copyText(t){navigator.clipboard?.writeText(t).then(()=>alert('Copiado.')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('Copiado.')})}
 function loadSettings(){try{const s=JSON.parse(localStorage.getItem(KEY_SET)||'{}');if(s.email)$('#emailAddress').value=s.email}catch(_){}}
-$('#dictate').addEventListener('pointerdown',startDictation);['pointerup','pointercancel','pointerleave'].forEach(ev=>$('#dictate').addEventListener(ev,stopDictation));$('#dictate').addEventListener('contextmenu',e=>e.preventDefault());
-$('#generate').onclick=generate;$('#clearRaw').onclick=()=>{if(confirm('¿Borrar solo el dictado?')){$('#raw').value='';saveDraft()}};$('#newNote').onclick=()=>clearDraft(true);$('#newNoteTop').onclick=()=>clearDraft(true);$('#discardDraft').onclick=()=>clearDraft(true);$('#savePatient').onclick=savePatientEntry;$('#copyReport').onclick=()=>copyText(collectReportText());$('#emailReport').onclick=()=>{const to=$('#emailAddress').value.trim(),subject=encodeURIComponent(`Psikia · ${$('#patientCode').value||'nota'} · ${templates[$('#visitType').value].label}`),body=encodeURIComponent(collectReportText());location.href=`mailto:${encodeURIComponent(to)}?subject=${subject}&body=${body}`};
-$('#applyMeds').onclick=applyMeds;$('#raw').addEventListener('input',saveDraft);['patientCode','diagnosis'].forEach(id=>$('#'+id).addEventListener('input',()=>{saveDraft();updatePatientContext()}));$('#visitType').addEventListener('change',()=>{reportData={};$('#reportCard').hidden=true;saveDraft()});$('#patientFilter').addEventListener('input',renderPatients);$('#openPatients').onclick=()=>showTab('patients');$$('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));$('#saveSettings').onclick=()=>{localStorage.setItem(KEY_SET,JSON.stringify({email:$('#emailAddress').value.trim()}));alert('Ajustes guardados.')};
-initMeds();loadSettings();loadDraft();renderPatients();
+$('#dictate').addEventListener('click',toggleDictation);$('#dictate').addEventListener('contextmenu',e=>e.preventDefault());
+$('#generate').onclick=generate;$('#clearRaw').onclick=()=>{if(confirm('¿Borrar solo el dictado?')){$('#raw').value=''}};$('#newNote').onclick=()=>clearCurrentNote(true);$('#newNoteTop').onclick=()=>clearCurrentNote(true);$('#discardDraft').onclick=()=>clearCurrentNote(true);$('#savePatient').onclick=savePatientEntry;$('#copyReport').onclick=()=>copyText(collectReportText());$('#emailReport').onclick=()=>{const to=$('#emailAddress').value.trim(),subject=encodeURIComponent(`Psikia · ${$('#patientCode').value||'nota'} · ${templates[$('#visitType').value].label}`),body=encodeURIComponent(collectReportText());location.href=`mailto:${encodeURIComponent(to)}?subject=${subject}&body=${body}`};
+$('#applyMeds').onclick=applyMeds;['patientCode','diagnosis'].forEach(id=>$('#'+id).addEventListener('input',updatePatientContext));$('#visitType').addEventListener('change',()=>{reportData={};$('#reportCard').hidden=true;$('#reportSections').innerHTML=''});$('#patientFilter').addEventListener('input',renderPatients);$('#openPatients').onclick=()=>showTab('patients');$$('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));$('#saveSettings').onclick=()=>{localStorage.setItem(KEY_SET,JSON.stringify({email:$('#emailAddress').value.trim()}));alert('Ajustes guardados.')};
+// Remove stale active drafts created by v2.5 and earlier. Patient history is kept.
+['psikia_v25_draft','psikia_v24_draft','psikia_draft'].forEach(k=>localStorage.removeItem(k));
+initMeds();loadSettings();renderPatients();
 </script>
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{})}</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=26",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{})}</script>
 </body>
 </html>

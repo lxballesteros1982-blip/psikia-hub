@@ -345,7 +345,7 @@ async function transcribeBlob(blob){
   try{
     const res=await fetch(base+'/transcribe',{
       method:'POST',
-      headers:{'Content-Type':blob.type||'application/octet-stream'},
+      headers:{'Content-Type':blob.type||'application/octet-stream',...(getSettings().vocabulary?{'X-Psikia-Vocabulary':encodeURIComponent(getSettings().vocabulary)}:{})},
       body:blob,
       signal:controller.signal
     });
@@ -481,10 +481,10 @@ function segmentLocal(text,type){
 function getSettings(){
   let stored={}; try{stored=JSON.parse(localStorage.getItem(KEY_SET)||'{}');}catch(_){}
   const cfg=window.PSIKIA_CONFIG||{};
-  return {email:stored.email||DEFAULT_EMAIL,workerUrl:stored.workerUrl||cfg.apiBase||''};
+  return {email:stored.email||DEFAULT_EMAIL,workerUrl:stored.workerUrl||cfg.apiBase||'',vocabulary:stored.vocabulary||''};
 }
 function saveSettings(){
-  const s={email:$('#emailAddress').value.trim()||DEFAULT_EMAIL,workerUrl:$('#workerUrl').value.trim().replace(/\/+$/,'')};
+  const s={email:$('#emailAddress').value.trim()||DEFAULT_EMAIL,workerUrl:$('#workerUrl').value.trim().replace(/\/+$/,''),vocabulary:($('#localVocabulary')?.value||'').trim().slice(0,1400)};
   localStorage.setItem(KEY_SET,JSON.stringify(s));
   $('#workerStatus').textContent='Ajustes guardados.';
   updateEngineStatus();
@@ -651,7 +651,7 @@ async function testWorker(){
 function updateEngineStatus(){
   const s=getSettings(); $('#engineStatus').innerHTML=s.workerUrl?'<span class="statusDot ok"></span>Ordenación: Cloudflare Worker + Workers AI (sin fallback silencioso).':'<span class="statusDot warn"></span>Ordenación: segmentador local. Configura el Worker en Ajustes.';
 }
-function loadSettings(){const s=getSettings();$('#emailAddress').value=s.email;$('#workerUrl').value=s.workerUrl;updateEngineStatus();}
+function loadSettings(){const s=getSettings();$('#emailAddress').value=s.email;$('#workerUrl').value=s.workerUrl;if($('#localVocabulary'))$('#localVocabulary').value=s.vocabulary||'';updateEngineStatus();}
 function emailReport(){
   const to=$('#emailAddress').value.trim()||DEFAULT_EMAIL,subject=encodeURIComponent(`Psikia · ${$('#patientCode').value||'nota'} · ${currentTemplate().label}`),body=encodeURIComponent(collectReportText());
   location.href=`mailto:${encodeURIComponent(to)}?subject=${subject}&body=${body}`;

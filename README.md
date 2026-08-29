@@ -1,3 +1,13 @@
+# Psikia Hub v4.7 · vocabulario clínico y guardas semánticas
+
+- Dictado continuo mediante MediaRecorder + Whisper Large v3 Turbo.
+- Vocabulario psiquiátrico/farmacológico integrado en el Worker.
+- Campo opcional de vocabulario local en Ajustes para recursos, siglas y topónimos.
+- Correcciones conservadoras de errores de reconocimiento muy frecuentes.
+- Reglas de Urgencias más estrictas para información colateral, evolución posterior a intervención y juicio clínico.
+- Sin fallback silencioso si Workers AI falla.
+- La salida sigue siendo un borrador que requiere revisión y validación médica.
+
 # Psikia Hub v4.6 · Whisper + Workers AI
 
 Esta versión cambia el dictado a grabación continua por pulsación (MediaRecorder) y transcripción con Whisper Large v3 Turbo en el Worker. Los silencios ya no provocan reinicios automáticos del reconocimiento del navegador.

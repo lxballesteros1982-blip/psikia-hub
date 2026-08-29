@@ -7,7 +7,7 @@
 <meta name="description" content="Psikia Hub: dictado clínico, estructuración de notas y mini historia local.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<title>Psikia Hub v4.6</title>
+<title>Psikia Hub v4.7</title>
 <style>
 :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b;--ai:#5b3f8c}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{min-height:100vh}
@@ -25,7 +25,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 </style>
 </head>
 <body>
-<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.6</span></div><div class="sub">dictado continuo por pulsación · nota limpia · mini historia · Workers AI conectado</div></div></div></header>
+<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.7</span></div><div class="sub">dictado continuo por pulsación · vocabulario clínico · nota limpia · Workers AI conectado</div></div></div></header>
 <main>
 <section id="tab-note" class="tab active">
   <div class="card">
@@ -84,7 +84,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
     <button id="testWorker" class="secondary" style="margin-top:8px">Probar conexión</button>
     <div id="workerStatus" class="small" style="margin-top:7px"></div>
   </div>
-  <div class="card"><h2>Ajustes</h2><label>Correo profesional</label><input id="emailAddress" type="email"><button id="saveSettings" style="margin-top:8px">Guardar ajustes</button></div>
+  <div class="card"><h2>Ajustes</h2><label>Correo profesional</label><input id="emailAddress" type="email"><label>Vocabulario local / personalizado</label><textarea id="localVocabulary" class="mini" maxlength="1400" placeholder="Ej.: Osasunbidea, HUN, UHP, ETAC, nombres de recursos, localidades, siglas o términos que Whisper confunda"></textarea><div class="small" style="margin-top:6px">Se usa solo para orientar la transcripción. Añade términos estables; evita nombres o identificadores de pacientes.</div><button id="saveSettings" style="margin-top:8px">Guardar ajustes</button></div>
   <div class="card"><h2>Persistencia</h2><div class="notice info"><b>Nota activa:</b> no se persiste. Al reabrir, empieza vacía. <b>Mini historia y ajustes:</b> sí permanecen en este dispositivo.</div><button id="discardDraft" class="danger">Limpiar nota actual</button></div>
   <div class="card"><h2>RAG clínico</h2><div class="notice ai"><span class="statusDot warn"></span><b>Preparado, no activado todavía.</b> El Worker deja el punto de entrada para Vectorize/embeddings. No se etiqueta ninguna sugerencia como “basada en Maudsley/Stahl/Kaplan” hasta que esa recuperación bibliográfica esté realmente conectada.</div></div>
 </section>

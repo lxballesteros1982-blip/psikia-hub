@@ -302,14 +302,11 @@ const cueMap = {
 
 let reportData = {};
 let unclassified = [];
-let recognition = null;
-let dictationWanted = false;
-let recognitionRunning = false;
-let manualStop = false;
-let restartTimer = null;
-let sessionBase = '';
-let sessionText = '';
-let lastEventText = '';
+let mediaRecorder = null;
+let mediaStream = null;
+let audioChunks = [];
+let recording = false;
+let transcribing = false;
 let reloadOnControllerChange = false;
 
 function currentTemplate(){ return templates[$('#visitType').value]; }
@@ -324,115 +321,97 @@ function spokenPunctuation(text){
   return x;
 }
 
-function wordsNorm(s){ return norm(s).replace(/[^a-z0-9ñáéíóúü]+/gi,' ').replace(/\s+/g,' ').trim(); }
-function startsWithWords(longer, shorter){ const a=wordsNorm(longer), b=wordsNorm(shorter); return !!b && (a===b || a.startsWith(b+' ')); }
-function sameEnough(a,b){ const x=wordsNorm(a), y=wordsNorm(b); return x===y || (x.length>24 && y.length>24 && (x.includes(y) || y.includes(x))); }
-function mergeWithoutEcho(existing,incoming){
-  const a=String(existing||'').trim(), b=String(incoming||'').trim(); if(!a)return b; if(!b)return a;
-  if(sameEnough(a,b)) return wordsNorm(b).length>wordsNorm(a).length?b:a;
-  const aw=a.split(/\s+/), bw=b.split(/\s+/); let overlap=0;
-  for(let k=Math.min(32,aw.length,bw.length);k>=2;k--){
-    if(wordsNorm(aw.slice(-k).join(' '))===wordsNorm(bw.slice(0,k).join(' '))){overlap=k;break;}
-  }
-  const tail=bw.slice(overlap).join(' '); return tail?`${a} ${tail}`:a;
-}
-function cleanSpeechChunk(txt, finish=false){
-  let x=spokenPunctuation(txt).replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim(); if(!x)return '';
-  x=x.charAt(0).toUpperCase()+x.slice(1);
-  if(finish && !/[.!?…]$/.test(x)) x+='.';
-  return x;
-}
-function canonicalResults(e){
-  const finals=[];
-  for(let i=0;i<e.results.length;i++){
-    const r=e.results[i], tx=String(r?.[0]?.transcript||'').replace(/\s+/g,' ').trim();
-    if(tx && r.isFinal) finals.push(tx);
-  }
-  if(!finals.length)return '';
-  const collapsed=[];
-  for(const tx of finals){
-    if(!collapsed.length){collapsed.push(tx);continue;}
-    const last=collapsed[collapsed.length-1];
-    if(startsWithWords(tx,last)){collapsed[collapsed.length-1]=tx;continue;}
-    if(startsWithWords(last,tx)||sameEnough(last,tx))continue;
-    collapsed.push(tx);
-  }
-  return collapsed.join(' ').replace(/\s+/g,' ').trim();
-}
-function updateSpeechSession(candidate,event){
-  if(!candidate)return;
-  if(!sessionText) sessionText=candidate;
-  else if(startsWithWords(candidate,sessionText)) sessionText=candidate;
-  else if(startsWithWords(sessionText,candidate)) {}
-  else if(event.results.length>1) sessionText=candidate;
-  else if(lastEventText && startsWithWords(candidate,lastEventText)){
-    const base=sessionText, bn=wordsNorm(base), ln=wordsNorm(lastEventText);
-    if(bn.endsWith(ln)){
-      const idx=norm(base).lastIndexOf(norm(lastEventText));
-      sessionText=idx>=0?base.slice(0,idx)+candidate:candidate;
-    } else sessionText=candidate;
-  } else sessionText=mergeWithoutEcho(sessionText,candidate);
-  lastEventText=candidate;
-  const piece=cleanSpeechChunk(sessionText,false);
-  $('#raw').value=[sessionBase,piece].filter(Boolean).join(sessionBase&&piece?'\n':'');
-  $('#raw').scrollTop=$('#raw').scrollHeight;
-  updatePrivacyWarning();
-}
-function finalizeSpeechCycle(){
-  const piece=cleanSpeechChunk(sessionText,true);
-  const combined=[sessionBase,piece].filter(Boolean).join(sessionBase&&piece?'\n':'');
-  $('#raw').value=combined.trim();
-  sessionBase=$('#raw').value.trim(); sessionText=''; lastEventText='';
-  updatePrivacyWarning();
-}
 function setMic(on,msg){
-  const b=$('#dictate'); b.classList.toggle('listening',on); b.textContent=on?'⏹️ Pulsar para detener':'🎙️ Pulsar para hablar';
+  const b=$('#dictate');
+  b.classList.toggle('listening',on);
+  b.textContent=on?'⏹️ Pulsar para detener':'🎙️ Pulsar para hablar';
+  b.disabled=transcribing;
   if(msg) $('#dictationStatus').textContent=msg;
 }
-function makeRecognition(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return null;
-  const r=new SR(); r.lang='es-ES'; r.continuous=true; r.interimResults=false; r.maxAlternatives=1;
-  try{ if('unspokenPunctuation' in r) r.unspokenPunctuation=true; }catch(_){}
-  r.onstart=()=>{
-    recognitionRunning=true; sessionBase=$('#raw').value.trim(); sessionText=''; lastEventText='';
-    setMic(true,'Dictando… Se detiene solo cuando vuelves a pulsar.');
-  };
-  r.onresult=e=>{ const fin=canonicalResults(e); if(fin)updateSpeechSession(fin,e); $('#dictationStatus').textContent='Dictando… texto consolidado sin repetir hipótesis.'; };
-  r.onerror=e=>{
-    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
-      dictationWanted=false; recognitionRunning=false; setMic(false,'Permiso de micrófono denegado.'); return;
-    }
-    if(!['no-speech','aborted'].includes(e.error)) $('#dictationStatus').textContent='Incidencia de dictado: '+e.error+'. Reintentando mientras siga activo…';
-  };
-  r.onend=()=>{
-    finalizeSpeechCycle(); recognitionRunning=false;
-    if(dictationWanted && !manualStop){
-      setMic(true,'Dictando… pausa detectada; continúo sin que tengas que tocar el botón.');
-      clearTimeout(restartTimer);
-      restartTimer=setTimeout(()=>startRecognitionCycle(),180);
-    } else {
-      setMic(false,'Dictado detenido.');
-    }
-  };
-  return r;
+
+function bestRecorderMime(){
+  const candidates=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+  for(const mime of candidates){
+    try{ if(window.MediaRecorder?.isTypeSupported?.(mime)) return mime; }catch(_){}
+  }
+  return '';
 }
-function startRecognitionCycle(){
-  if(!dictationWanted || manualStop)return;
-  if(!recognition) recognition=makeRecognition();
-  if(!recognition){ dictationWanted=false; setMic(false,'Este navegador no ofrece Web Speech. Puedes escribir o pegar el texto.'); return; }
-  try{ recognition.start(); }catch(_){
-    clearTimeout(restartTimer);
-    restartTimer=setTimeout(()=>{ if(dictationWanted&&!manualStop)startRecognitionCycle(); },350);
+
+async function transcribeBlob(blob){
+  const base=($('#workerUrl').value||'').trim().replace(/\/+$/,'');
+  if(!base) throw new Error('Configura primero el Worker en Ajustes');
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),45000);
+  try{
+    const res=await fetch(base+'/transcribe',{
+      method:'POST',
+      headers:{'Content-Type':blob.type||'application/octet-stream'},
+      body:blob,
+      signal:controller.signal
+    });
+    let data={};
+    try{data=await res.json();}catch(_){throw new Error('Respuesta no JSON al transcribir');}
+    if(!res.ok||!data.ok) throw new Error(data.error||('HTTP '+res.status));
+    return String(data.text||'').trim();
+  }catch(err){
+    if(err?.name==='AbortError') throw new Error('La transcripción tardó demasiado');
+    throw err;
+  }finally{clearTimeout(timer);}
+}
+
+async function startRecording(){
+  if(transcribing||recording) return;
+  if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder){
+    setMic(false,'Este navegador no permite grabación continua. Puedes escribir o pegar el texto.');
+    return;
+  }
+  try{
+    mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    audioChunks=[];
+    const mime=bestRecorderMime();
+    mediaRecorder=mime?new MediaRecorder(mediaStream,{mimeType:mime}):new MediaRecorder(mediaStream);
+    mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)audioChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{
+      recording=false;
+      mediaStream?.getTracks().forEach(t=>t.stop());
+      mediaStream=null;
+      const blob=new Blob(audioChunks,{type:mediaRecorder?.mimeType||mime||'audio/webm'});
+      audioChunks=[];
+      if(!blob.size){setMic(false,'No se capturó audio.');return;}
+      transcribing=true;setMic(false,'Transcribiendo el dictado…');
+      try{
+        const text=await transcribeBlob(blob);
+        const cleaned=spokenPunctuation(text).trim();
+        const current=$('#raw').value.trim();
+        $('#raw').value=[current,cleaned].filter(Boolean).join(current&&cleaned?'\n':'');
+        $('#raw').scrollTop=$('#raw').scrollHeight;
+        updatePrivacyWarning();
+        $('#dictationStatus').textContent='Dictado transcrito. Pulsa de nuevo para añadir otra toma.';
+      }catch(err){
+        $('#dictationStatus').textContent='No se pudo transcribir: '+(err?.message||String(err))+'. El texto anterior se conserva.';
+      }finally{
+        transcribing=false;setMic(false);
+      }
+    };
+    mediaRecorder.start(1000);
+    recording=true;
+    setMic(true,'Grabando de forma continua… los silencios no reinician el micrófono. Pulsa para terminar.');
+  }catch(err){
+    mediaStream?.getTracks().forEach(t=>t.stop());mediaStream=null;recording=false;
+    setMic(false,'No se pudo abrir el micrófono: '+(err?.message||String(err)));
   }
 }
+
+function stopRecording(){
+  if(!recording||!mediaRecorder)return;
+  setMic(true,'Cerrando grabación…');
+  try{mediaRecorder.stop();}catch(_){recording=false;mediaStream?.getTracks().forEach(t=>t.stop());mediaStream=null;setMic(false,'Dictado detenido.');}
+}
+
 function toggleDictation(e){
   e?.preventDefault();
-  if(dictationWanted){
-    dictationWanted=false; manualStop=true; clearTimeout(restartTimer);
-    try{ if(recognitionRunning)recognition.stop(); else recognition.abort(); }catch(_){}
-    finalizeSpeechCycle(); setMic(false,'Dictado detenido.'); return;
-  }
-  manualStop=false; dictationWanted=true; startRecognitionCycle();
+  if(transcribing)return;
+  if(recording)stopRecording();else startRecording();
 }
 
 function headingForChunk(text,type){
@@ -524,10 +503,10 @@ function updatePrivacyWarning(){
   if(hits.length){box.hidden=false;box.innerHTML='<b>Revisa antes de enviar al motor:</b> posible identificador directo ('+esc(hits.join(', '))+').';}
   else box.hidden=true;
 }
-async function segmentWithWorker(text,type){
+async function segmentWithWorker(text,type,signal){
   const endpoint=workerEndpoint(); if(!endpoint) throw new Error('WORKER_NOT_CONFIGURED');
   const reportType=WORKER_REPORT_TYPE[type]; if(!reportType) throw new Error('WORKER_TYPE_NOT_SUPPORTED');
-  const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report_type:reportType,transcript:text})});
+  const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report_type:reportType,transcript:text}),signal});
   let data={}; try{data=await res.json();}catch(_){throw new Error('Respuesta no JSON del Worker');}
   if(!res.ok || !data.ok) throw new Error(data.error||('HTTP '+res.status));
   return {
@@ -546,26 +525,32 @@ async function generate(){
     if(!confirm('He detectado un posible identificador directo. ¿Quieres enviar igualmente este texto al Worker?'))return;
   }
   const btn=$('#generate'); btn.disabled=true; btn.textContent='Ordenando…';
-  let result;
+  const type=$('#visitType').value;
   try{
-    const type=$('#visitType').value;
+    let result;
     if(workerEndpoint() && workerSupportsType(type)){
-      $('#engineStatus').textContent='Usando Cloudflare Worker + Workers AI…';
-      result=await segmentWithWorker(text,type);
+      $('#engineStatus').textContent='Ordenando con Cloudflare Workers AI…';
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),30000);
+      try{
+        result=await segmentWithWorker(text,type,controller.signal);
+      }finally{clearTimeout(timer);}
     } else {
       result=segmentLocal(text,type);
       if(workerEndpoint() && !workerSupportsType(type)){
         $('#engineStatus').textContent='Este tipo de nota aún usa el segmentador local; el Worker no tiene plantilla equivalente.';
       }
     }
+    reportData=result.sections; unclassified=result.unclassified||[];
+    populateMedicationChanges(result.medicationChanges||[]);
+    renderReport(result.engine,result.model||'');
+    if(result.engine==='workers_ai') $('#engineStatus').textContent='Nota ordenada con Workers AI.';
   }catch(err){
-    console.warn('Worker unavailable, local fallback:',err);
-    result=segmentLocal(text,$('#visitType').value);
-    $('#engineStatus').textContent='El Worker no respondió; he usado el segmentador local. '+(err?.message||'');
+    console.warn('Worker error:',err);
+    const msg=err?.name==='AbortError'?'El Worker tardó más de 30 segundos.':(err?.message||String(err));
+    $('#engineStatus').textContent='No se pudo ordenar con IA: '+msg+' El dictado se conserva íntegro; no se ha aplicado fallback local.';
+    alert('No se pudo estructurar la nota con la IA.\n\n'+msg+'\n\nEl dictado se conserva y no se ha sustituido por una segmentación local.');
   }finally{btn.disabled=false;btn.textContent='✨ Ordenar nota';}
-  reportData=result.sections; unclassified=result.unclassified||[];
-  populateMedicationChanges(result.medicationChanges||[]);
-  renderReport(result.engine,result.model||'');
 }
 function renderReport(engine='local',model=''){
   const t=currentTemplate(), host=$('#reportSections'); host.innerHTML=''; $('#reportHeading').textContent=t.label;
@@ -603,8 +588,7 @@ function collectReportText(){
 }
 function clearCurrentNote(confirmIt=true,keepPatient=false){
   if(confirmIt && !confirm('¿Limpiar la nota actual? La mini historia guardada no se borra.'))return;
-  dictationWanted=false; manualStop=true; clearTimeout(restartTimer); try{recognition?.abort();}catch(_){}
-  recognitionRunning=false; sessionBase='';sessionText='';lastEventText=''; reportData={};unclassified=[];
+  try{if(recording&&mediaRecorder){mediaRecorder.onstop=null;mediaRecorder.stop();}}catch(_){} mediaStream?.getTracks().forEach(t=>t.stop()); mediaStream=null; mediaRecorder=null; audioChunks=[]; recording=false; transcribing=false; reportData={};unclassified=[];
   if(!keepPatient){$('#patientCode').value='';$('#diagnosis').value='';}
   $('#raw').value='';$('#reportCard').hidden=true;$('#reportSections').innerHTML='';$('#unclassifiedReview').innerHTML='';
   for(let i=1;i<=4;i++){const n=$('#medName'+i),p=$('#medPlan'+i);if(n)n.value='';if(p)p.value='';}
@@ -665,7 +649,7 @@ async function testWorker(){
   catch(e){box.innerHTML='<span class="statusDot warn"></span>No se pudo conectar: '+esc(e.message||String(e));}
 }
 function updateEngineStatus(){
-  const s=getSettings(); $('#engineStatus').innerHTML=s.workerUrl?'<span class="statusDot ok"></span>Ordenación: Cloudflare Worker + Workers AI (con fallback local).':'<span class="statusDot warn"></span>Ordenación: segmentador local. Configura el Worker en Ajustes.';
+  const s=getSettings(); $('#engineStatus').innerHTML=s.workerUrl?'<span class="statusDot ok"></span>Ordenación: Cloudflare Worker + Workers AI (sin fallback silencioso).':'<span class="statusDot warn"></span>Ordenación: segmentador local. Configura el Worker en Ajustes.';
 }
 function loadSettings(){const s=getSettings();$('#emailAddress').value=s.email;$('#workerUrl').value=s.workerUrl;updateEngineStatus();}
 function emailReport(){

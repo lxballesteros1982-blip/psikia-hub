@@ -7,7 +7,7 @@
 <meta name="description" content="Psikia Hub: dictado clínico, estructuración de notas y mini historia local.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<title>Psikia Hub v4.5</title>
+<title>Psikia Hub v4.6</title>
 <style>
 :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b;--ai:#5b3f8c}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{min-height:100vh}
@@ -25,7 +25,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 </style>
 </head>
 <body>
-<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.5</span></div><div class="sub">dictado continuo por pulsación · nota limpia · mini historia · Workers AI conectado</div></div></div></header>
+<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.6</span></div><div class="sub">dictado continuo por pulsación · nota limpia · mini historia · Workers AI conectado</div></div></div></header>
 <main>
 <section id="tab-note" class="tab active">
   <div class="card">
@@ -47,8 +47,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
   <div class="card">
     <div class="eyebrow">Captura clínica</div><h2>Dictado / texto fuente</h2>
     <button id="dictate" class="mic">🎙️ Pulsar para hablar</button>
-    <div id="dictationStatus" class="notice info">Una pulsación inicia el dictado y otra lo detiene. Si Android corta internamente por una pausa, la app lo reanuda en segundo plano sin cambiar el estado del botón.</div>
-    <textarea id="raw" placeholder="Dicta de forma natural. La app consolida hipótesis crecientes y evita repetir frases. El borrador activo no se conserva al cerrar/reabrir."></textarea>
+    <div id="dictationStatus" class="notice info">Una pulsación inicia una grabación continua y otra la termina. Los silencios no reinician el micrófono; al parar, Whisper transcribe la toma.</div>
+    <textarea id="raw" placeholder="Dicta de forma natural y pulsa de nuevo para terminar la toma. El audio se transcribe al finalizar. El borrador activo no se conserva al cerrar/reabrir."></textarea>
     <div id="privacyNotice" class="notice warn" hidden></div>
     <div class="row" style="margin-top:8px"><button id="generate" class="ai">✨ Ordenar nota</button><button id="clearRaw" class="ghost">Borrar dictado</button><button id="newNote" class="secondary">Nueva nota</button></div>
     <div id="engineStatus" class="small" style="margin-top:8px"></div>

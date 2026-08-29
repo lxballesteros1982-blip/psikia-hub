@@ -1,3 +1,11 @@
+# Psikia Hub v4.6 · Whisper + Workers AI
+
+Esta versión cambia el dictado a grabación continua por pulsación (MediaRecorder) y transcripción con Whisper Large v3 Turbo en el Worker. Los silencios ya no provocan reinicios automáticos del reconocimiento del navegador.
+
+La estructuración de notas usa Workers AI con salida JSON estructurada. Si el Worker falla en un tipo de nota soportado, la app conserva el dictado y muestra el error: no aplica un fallback local silencioso.
+
+El profesional debe revisar y validar siempre la salida antes de incorporarla a la historia clínica.
+
 # Psikia Hub v4.5 · Cloudflare Workers AI conectado
 
 PWA clínica local-first, no comercial, para apoyo a documentación clínica. El profesional debe revisar y validar siempre la salida antes de incorporarla a la historia clínica.

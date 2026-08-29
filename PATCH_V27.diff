@@ -1,0 +1,44 @@
+--- index.html.v2.7
++++ index.html.v2.8
+@@
+-function updateSpeechSession(candidate,event){
++function combineWithBase(base,piece){
++ base=String(base||'').trim(); piece=String(piece||'').trim();
++ if(!base)return {text:piece,echoTrimmed:false};
++ if(!piece)return {text:base,echoTrimmed:false};
++ if(sameEnough(base,piece))return {text:base,echoTrimmed:true};
++ const bw=base.split(/\s+/), pw=piece.split(/\s+/); let overlap=0;
++ for(let k=Math.min(24,bw.length,pw.length);k>=1;k--){
++  const a=wordsNorm(bw.slice(-k).join(' ')), b=wordsNorm(pw.slice(0,k).join(' '));
++  if(a===b && (k>=2 || a.length>=4)){overlap=k;break}
++ }
++ const trimmed=overlap?pw.slice(overlap).join(' '):piece;
++ if(!trimmed)return {text:base,echoTrimmed:!!overlap};
++ return {text:overlap?`${base} ${trimmed}`:`${base}\n${trimmed}`,echoTrimmed:!!overlap};
++}
++
++function updateSpeechSession(candidate,event){
+  if(!candidate)return;
+  if(!speechSessionText)speechSessionText=candidate;
+  else if(startsWithWords(candidate,speechSessionText))speechSessionText=candidate;
+  else if(startsWithWords(speechSessionText,candidate)){}
+- else if(event.results.length>1)speechSessionText=candidate;
+  else if(lastEventText&&startsWithWords(candidate,lastEventText)){
+    ...
+  }else speechSessionText=mergeWithoutEcho(speechSessionText,candidate);
+  lastEventText=candidate;
+  const raw=$('#raw'),piece=cleanSpeechChunk(speechSessionText,false);
+- raw.value=[speechSessionBase,piece].filter(Boolean).join(speechSessionBase&&piece?'\n':'');
++ const merged=combineWithBase(speechSessionBase,piece);
++ raw.value=merged.text;
++ if(merged.echoTrimmed)$('#dictationStatus').textContent='Dictando… se ha recortado un posible eco de Android al inicio de este bloque, revísalo.';
+  raw.scrollTop=raw.scrollHeight;
+ }
+ function finalizeSpeechSession(){
+  const raw=$('#raw'),piece=cleanSpeechChunk(speechSessionText,true);
+- raw.value=[speechSessionBase,piece].filter(Boolean).join(speechSessionBase&&piece?'\n':'');
++ const merged=combineWithBase(speechSessionBase,piece);
++ raw.value=merged.text;
+  speechSessionBase=raw.value.trim(); speechSessionText=''; lastEventText='';
++ return merged.echoTrimmed;
+ }

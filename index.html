@@ -7,7 +7,7 @@
 <meta name="description" content="Psikia Hub: dictado clínico, estructuración de notas y mini historia local.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<title>Psikia Hub v4.7</title>
+<title>Psikia Hub v4.8</title>
 <style>
 :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b;--ai:#5b3f8c}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{min-height:100vh}
@@ -20,12 +20,12 @@ button{border:0;border-radius:11px;padding:10px 12px;min-height:44px;font-weight
 .reportSection{border-top:1px solid var(--line);padding:11px 0}.reportSection:first-child{border-top:0}.reportTitle{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase}.reportEdit{min-height:96px;font-size:15px;line-height:1.48;margin-top:6px}.contextBox{border:1px solid #d5e3ea;background:#f8fbfd;border-radius:11px;padding:9px;margin-top:8px;white-space:pre-wrap}
 .patientCard{border:1px solid var(--line);border-radius:14px;background:#fff;margin:8px 0;overflow:hidden}.patientTop{padding:11px 12px;display:flex;justify-content:space-between;gap:9px;align-items:flex-start}.patientCode{font-size:18px;font-weight:900;color:var(--primary)}.patientDx{font-size:12px;color:#3c5667}.badge{font-size:10px;border-radius:999px;padding:4px 7px;background:var(--soft);color:var(--primary);white-space:nowrap}.entry{border-top:1px solid var(--line);padding:10px 12px}.entryMeta{font-size:10px;color:var(--muted);margin-bottom:4px}.entrySummary{font-size:12px;line-height:1.42}.patientActions{display:flex;gap:6px;margin-top:8px}.patientActions button{min-height:38px;padding:7px 9px;font-size:12px}
 .medGrid{display:grid;grid-template-columns:1fr;gap:8px}.medSlot{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fcfdfe}.reviewItem{border:1px dashed #d6c48a;border-radius:10px;padding:9px;margin-top:6px;background:#fffdf6}.reviewText{font-size:13px;line-height:1.42}.pill{display:inline-block;font-size:10px;border-radius:999px;padding:3px 7px;background:#eef2f4;color:#52636e;margin-left:5px}
-nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}nav button{background:transparent;color:#60717c;padding:4px 2px;min-height:56px;font-size:10px;border-radius:9px}nav button.active{background:var(--soft);color:var(--primary)}nav .ico{display:block;font-size:20px;margin-bottom:2px}.statusDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#aaa;margin-right:5px}.statusDot.ok{background:#1b8a63}.statusDot.warn{background:#d49a2a}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}nav button{background:transparent;color:#60717c;padding:4px 2px;min-height:56px;font-size:10px;border-radius:9px}nav button.active{background:var(--soft);color:var(--primary)}nav .ico{display:block;font-size:20px;margin-bottom:2px}.statusDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#aaa;margin-right:5px}.statusDot.ok{background:#1b8a63}.statusDot.warn{background:#d49a2a}.adaptiveRule{display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding:9px 0}.adaptiveRule:first-child{border-top:0}.adaptiveRule button{flex:0 0 auto;min-height:36px;padding:6px 9px}
 @media(min-width:680px){.two{grid-template-columns:1fr 1fr}.medGrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.7</span></div><div class="sub">dictado continuo por pulsación · vocabulario clínico · nota limpia · Workers AI conectado</div></div></div></header>
+<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.8</span></div><div class="sub">dictado continuo por pulsación · vocabulario adaptativo · nota limpia · Workers AI conectado</div></div></div></header>
 <main>
 <section id="tab-note" class="tab active">
   <div class="card">
@@ -50,7 +50,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
     <div id="dictationStatus" class="notice info">Una pulsación inicia una grabación continua y otra la termina. Los silencios no reinician el micrófono; al parar, Whisper transcribe la toma.</div>
     <textarea id="raw" placeholder="Dicta de forma natural y pulsa de nuevo para terminar la toma. El audio se transcribe al finalizar. El borrador activo no se conserva al cerrar/reabrir."></textarea>
     <div id="privacyNotice" class="notice warn" hidden></div>
-    <div class="row" style="margin-top:8px"><button id="generate" class="ai">✨ Ordenar nota</button><button id="clearRaw" class="ghost">Borrar dictado</button><button id="newNote" class="secondary">Nueva nota</button></div>
+    <div class="row" style="margin-top:8px"><button id="learnCorrection" class="secondary">🧠 Aprender corrección</button><button id="generate" class="ai">✨ Ordenar nota</button><button id="clearRaw" class="ghost">Borrar dictado</button><button id="newNote" class="secondary">Nueva nota</button></div>
+    <div id="learningStatus" class="small" style="margin-top:7px">El aprendizaje solo se activa con una corrección confirmada por ti.</div>
     <div id="engineStatus" class="small" style="margin-top:8px"></div>
   </div>
 
@@ -85,6 +86,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
     <div id="workerStatus" class="small" style="margin-top:7px"></div>
   </div>
   <div class="card"><h2>Ajustes</h2><label>Correo profesional</label><input id="emailAddress" type="email"><label>Vocabulario local / personalizado</label><textarea id="localVocabulary" class="mini" maxlength="1400" placeholder="Ej.: Osasunbidea, HUN, UHP, ETAC, nombres de recursos, localidades, siglas o términos que Whisper confunda"></textarea><div class="small" style="margin-top:6px">Se usa solo para orientar la transcripción. Añade términos estables; evita nombres o identificadores de pacientes.</div><button id="saveSettings" style="margin-top:8px">Guardar ajustes</button></div>
+  <div class="card"><div class="eyebrow">Adaptive dictionary v1</div><h2>Vocabulario aprendido</h2><div class="notice info"><b>No aprende de la IA ni de ediciones pasivas.</b> Solo suma una corrección cuando pulsas “Aprender corrección” y la confirmas. Tras 3 confirmaciones idénticas pasa a autocorrección local.</div><div id="adaptiveRules"></div><button id="clearLearned" class="danger" style="margin-top:8px">Borrar todo lo aprendido</button></div>
   <div class="card"><h2>Persistencia</h2><div class="notice info"><b>Nota activa:</b> no se persiste. Al reabrir, empieza vacía. <b>Mini historia y ajustes:</b> sí permanecen en este dispositivo.</div><button id="discardDraft" class="danger">Limpiar nota actual</button></div>
   <div class="card"><h2>RAG clínico</h2><div class="notice ai"><span class="statusDot warn"></span><b>Preparado, no activado todavía.</b> El Worker deja el punto de entrada para Vectorize/embeddings. No se etiqueta ninguna sugerencia como “basada en Maudsley/Stahl/Kaplan” hasta que esa recuperación bibliográfica esté realmente conectada.</div></div>
 </section>

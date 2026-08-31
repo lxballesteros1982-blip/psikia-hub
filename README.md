@@ -1,3 +1,15 @@
+# Psikia Hub v4.8 · adaptive_dictionary_v1
+
+- Conserva íntegra la v4.7: MediaRecorder + Whisper Large v3 Turbo, PUSH por pulsación, ausencia de reinicios por silencios y Workers AI actual.
+- No introduce Gemini ni cambia de proveedor/modelo.
+- Añade aprendizaje terminológico local y explícito: solo aprende cuando el médico corrige una palabra de la última toma y pulsa **Aprender corrección**.
+- Una regla queda como candidata con 1-2 confirmaciones y pasa a activa tras 3 confirmaciones idénticas.
+- Las reglas activas se aplican localmente a futuras transcripciones antes de ordenar la nota.
+- No aprende de inferencias del LLM, de silencios, ni del simple hecho de que una edición quede sin modificar.
+- Las reglas se pueden revisar, eliminar individualmente o borrar por completo en Ajustes.
+- Esta v1 guarda el diccionario aprendido solo en el dispositivo; la sincronización D1 se deja para una fase posterior.
+- `clinical_facts_v1` y el benchmark Llama/Gemini quedan como siguiente paso del Worker, no se simulan en el frontend.
+
 # Psikia Hub v4.7 · vocabulario clínico y guardas semánticas
 
 - Dictado continuo mediante MediaRecorder + Whisper Large v3 Turbo.

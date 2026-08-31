@@ -6,6 +6,7 @@ const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u030
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const KEY_PAT = 'psikia_v44_patients';
 const KEY_SET = 'psikia_v44_settings';
+const KEY_ADAPT = 'psikia_v48_adaptive_dictionary';
 const DEFAULT_EMAIL = 'Alejandro.ballesteros.prados@navarra.es';
 
 
@@ -308,6 +309,126 @@ let audioChunks = [];
 let recording = false;
 let transcribing = false;
 let reloadOnControllerChange = false;
+let lastDictationLearning = null;
+
+function adaptiveStore(){
+  try{
+    const data=JSON.parse(localStorage.getItem(KEY_ADAPT)||'{}');
+    return {rules:Array.isArray(data.rules)?data.rules:[]};
+  }catch(_){return {rules:[]};}
+}
+function saveAdaptiveStore(store){
+  localStorage.setItem(KEY_ADAPT,JSON.stringify({rules:Array.isArray(store?.rules)?store.rules:[]}));
+  renderAdaptiveRules();
+}
+function escapeRegex(s){return String(s||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function applyCasePattern(source,replacement){
+  if(!source)return replacement;
+  if(source===source.toUpperCase())return replacement.toUpperCase();
+  if(source[0]===source[0].toUpperCase())return replacement.charAt(0).toUpperCase()+replacement.slice(1);
+  return replacement;
+}
+function applyAdaptiveDictionary(text){
+  let out=String(text||'');
+  const store=adaptiveStore();
+  const active=store.rules
+    .filter(r=>r.status==='active' && r.heard && r.corrected_to)
+    .sort((a,b)=>String(b.heard).length-String(a.heard).length);
+  const applied=[];
+  for(const rule of active){
+    const re=new RegExp(`(^|[^\\p{L}\\p{N}])(${escapeRegex(rule.heard)})(?=$|[^\\p{L}\\p{N}])`,'giu');
+    out=out.replace(re,(m,prefix,found)=>{
+      applied.push({heard:found,corrected_to:rule.corrected_to,rule_id:rule.id,source:'personal_dictionary'});
+      return prefix+applyCasePattern(found,rule.corrected_to);
+    });
+  }
+  return {text:out,applied};
+}
+function wordTokens(s){
+  return String(s||'').trim().split(/\s+/).filter(Boolean);
+}
+function stripEdgePunct(s){
+  return String(s||'').replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'');
+}
+function detectSingleWordCorrection(before,after){
+  const a=wordTokens(before), b=wordTokens(after);
+  if(a.length!==b.length || !a.length)return null;
+  const diffs=[];
+  for(let i=0;i<a.length;i++){
+    const av=stripEdgePunct(a[i]), bv=stripEdgePunct(b[i]);
+    if(norm(av)!==norm(bv))diffs.push({heard:av,corrected_to:bv,index:i});
+  }
+  if(diffs.length!==1)return null;
+  const d=diffs[0];
+  if(!d.heard || !d.corrected_to || d.heard.length<3 || d.corrected_to.length<3)return null;
+  return d;
+}
+function confirmLearnedCorrection(){
+  if(!lastDictationLearning){
+    alert('No hay una toma reciente disponible para aprender. Dicta, corrige una palabra del último fragmento y vuelve a pulsar.');
+    return;
+  }
+  const current=$('#raw').value;
+  const prefix=lastDictationLearning.prefix;
+  if(!current.startsWith(prefix)){
+    alert('El texto anterior a la última toma cambió. Para evitar aprender una regla incorrecta, esta corrección no se guardará.');
+    return;
+  }
+  let edited=current.slice(prefix.length);
+  if(lastDictationLearning.hadPrefixNewline && edited.startsWith('\n'))edited=edited.slice(1);
+  edited=edited.trim();
+  const diff=detectSingleWordCorrection(lastDictationLearning.inserted,edited);
+  if(!diff){
+    alert('No puedo aislar una única sustitución de palabra en la última toma. Por seguridad no aprenderé nada automáticamente.');
+    return;
+  }
+  if(!confirm(`¿Recordar esta corrección del dictado?\n\n${diff.heard}  →  ${diff.corrected_to}\n\nSolo contará porque la estás confirmando explícitamente.`))return;
+  const store=adaptiveStore();
+  const keyHeard=norm(diff.heard), keyTarget=norm(diff.corrected_to);
+  const conflicts=store.rules.filter(r=>norm(r.heard)===keyHeard && norm(r.corrected_to)!==keyTarget && r.status!=='excluded');
+  let rule=store.rules.find(r=>norm(r.heard)===keyHeard && norm(r.corrected_to)===keyTarget);
+  if(!rule){
+    rule={id:'corr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),heard:diff.heard,corrected_to:diff.corrected_to,count:0,status:'candidate',created_at:new Date().toISOString(),last_confirmed_at:null};
+    store.rules.push(rule);
+  }
+  rule.count=Number(rule.count||0)+1;
+  rule.last_confirmed_at=new Date().toISOString();
+  rule.status=(rule.count>=3 && conflicts.length===0)?'active':'candidate';
+  saveAdaptiveStore(store);
+  lastDictationLearning.inserted=edited;
+  $('#learningStatus').textContent=rule.status==='active'
+    ? `Regla activa: “${rule.heard}” → “${rule.corrected_to}”. Se aplicará desde la próxima toma.`
+    : `Corrección confirmada ${rule.count}/3: “${rule.heard}” → “${rule.corrected_to}”. Aún no autocorrige.`;
+}
+function deleteAdaptiveRule(id){
+  const store=adaptiveStore();
+  const rule=store.rules.find(r=>r.id===id);
+  if(!rule)return;
+  if(!confirm(`¿Eliminar la regla “${rule.heard}” → “${rule.corrected_to}”?`))return;
+  store.rules=store.rules.filter(r=>r.id!==id);
+  saveAdaptiveStore(store);
+}
+function clearAdaptiveRules(){
+  const store=adaptiveStore();
+  if(!store.rules.length)return;
+  if(!confirm('¿Borrar todo el vocabulario aprendido? El vocabulario clínico del Worker y tu lista manual de Ajustes no se modifican.'))return;
+  saveAdaptiveStore({rules:[]});
+  $('#learningStatus').textContent='Vocabulario aprendido borrado.';
+}
+function renderAdaptiveRules(){
+  const host=$('#adaptiveRules');
+  if(!host)return;
+  const rules=adaptiveStore().rules.slice().sort((a,b)=>(b.last_confirmed_at||'').localeCompare(a.last_confirmed_at||''));
+  if(!rules.length){
+    host.innerHTML='<div class="small">Todavía no hay correcciones aprendidas.</div>';
+    return;
+  }
+  host.innerHTML=rules.map(r=>{
+    const state=r.status==='active'?'activa':`candidata ${Number(r.count||0)}/3`;
+    return `<div class="adaptiveRule"><div><b>${esc(r.heard)}</b> → <b>${esc(r.corrected_to)}</b><div class="small">${esc(state)} · solo confirmaciones humanas</div></div><button class="ghost deleteAdaptive" data-id="${esc(r.id)}">Eliminar</button></div>`;
+  }).join('');
+  $$('.deleteAdaptive').forEach(b=>b.onclick=()=>deleteAdaptiveRule(b.dataset.id));
+}
 
 function currentTemplate(){ return templates[$('#visitType').value]; }
 
@@ -381,11 +502,19 @@ async function startRecording(){
       transcribing=true;setMic(false,'Transcribiendo el dictado…');
       try{
         const text=await transcribeBlob(blob);
-        const cleaned=spokenPunctuation(text).trim();
+        const normalized=applyAdaptiveDictionary(text);
+        const cleaned=spokenPunctuation(normalized.text).trim();
         const current=$('#raw').value.trim();
-        $('#raw').value=[current,cleaned].filter(Boolean).join(current&&cleaned?'\n':'');
+        const hadPrefixNewline=Boolean(current&&cleaned);
+        $('#raw').value=[current,cleaned].filter(Boolean).join(hadPrefixNewline?'\n':'');
+        lastDictationLearning={prefix:current,inserted:cleaned,raw_whisper:text,hadPrefixNewline,applied:normalized.applied};
         $('#raw').scrollTop=$('#raw').scrollHeight;
         updatePrivacyWarning();
+        if(normalized.applied.length){
+          $('#learningStatus').textContent='Aplicada '+normalized.applied.length+' corrección aprendida en esta toma. Puedes editarla si no es correcta.';
+        }else{
+          $('#learningStatus').textContent='Si corriges una palabra de esta última toma, pulsa “Aprender corrección” para confirmarla.';
+        }
         $('#dictationStatus').textContent='Dictado transcrito. Pulsa de nuevo para añadir otra toma.';
       }catch(err){
         $('#dictationStatus').textContent='No se pudo transcribir: '+(err?.message||String(err))+'. El texto anterior se conserva.';
@@ -588,11 +717,11 @@ function collectReportText(){
 }
 function clearCurrentNote(confirmIt=true,keepPatient=false){
   if(confirmIt && !confirm('¿Limpiar la nota actual? La mini historia guardada no se borra.'))return;
-  try{if(recording&&mediaRecorder){mediaRecorder.onstop=null;mediaRecorder.stop();}}catch(_){} mediaStream?.getTracks().forEach(t=>t.stop()); mediaStream=null; mediaRecorder=null; audioChunks=[]; recording=false; transcribing=false; reportData={};unclassified=[];
+  try{if(recording&&mediaRecorder){mediaRecorder.onstop=null;mediaRecorder.stop();}}catch(_){} mediaStream?.getTracks().forEach(t=>t.stop()); mediaStream=null; mediaRecorder=null; audioChunks=[]; recording=false; transcribing=false; reportData={};unclassified=[];lastDictationLearning=null;
   if(!keepPatient){$('#patientCode').value='';$('#diagnosis').value='';}
   $('#raw').value='';$('#reportCard').hidden=true;$('#reportSections').innerHTML='';$('#unclassifiedReview').innerHTML='';
   for(let i=1;i<=4;i++){const n=$('#medName'+i),p=$('#medPlan'+i);if(n)n.value='';if(p)p.value='';}
-  setMic(false,'Dictado listo. Pulsa para empezar.'); updatePatientContext();updatePrivacyWarning(); window.scrollTo({top:0,behavior:'smooth'});
+  setMic(false,'Dictado listo. Pulsa para empezar.'); if($('#learningStatus'))$('#learningStatus').textContent='El aprendizaje solo se activa con una corrección confirmada por ti.'; updatePatientContext();updatePrivacyWarning(); window.scrollTo({top:0,behavior:'smooth'});
 }
 function getPatients(){try{return JSON.parse(localStorage.getItem(KEY_PAT)||'{}');}catch(_){return {};}}
 function setPatients(x){localStorage.setItem(KEY_PAT,JSON.stringify(x));}
@@ -658,17 +787,19 @@ function emailReport(){
 }
 
 $('#dictate').addEventListener('click',toggleDictation);$('#dictate').addEventListener('contextmenu',e=>e.preventDefault());
-$('#generate').onclick=generate;$('#clearRaw').onclick=()=>{if(confirm('¿Borrar solo el dictado?')){$('#raw').value='';updatePrivacyWarning();}};
+$('#generate').onclick=generate;$('#clearRaw').onclick=()=>{if(confirm('¿Borrar solo el dictado?')){$('#raw').value='';lastDictationLearning=null;if($('#learningStatus'))$('#learningStatus').textContent='El aprendizaje solo se activa con una corrección confirmada por ti.';updatePrivacyWarning();}};
 $('#newNote').onclick=()=>clearCurrentNote(true,false);$('#newNoteTop').onclick=()=>clearCurrentNote(true,false);$('#discardDraft').onclick=()=>clearCurrentNote(true,false);
 $('#savePatient').onclick=savePatientEntry;$('#copyReport').onclick=()=>copyText(collectReportText());$('#emailReport').onclick=emailReport;$('#applyMeds').onclick=applyMeds;
 ['patientCode','diagnosis'].forEach(id=>$('#'+id).addEventListener('input',updatePatientContext));$('#raw').addEventListener('input',updatePrivacyWarning);
 $('#visitType').addEventListener('change',()=>{reportData={};unclassified=[];$('#reportCard').hidden=true;$('#reportSections').innerHTML='';});
 $('#patientFilter').addEventListener('input',renderPatients);$('#openPatients').onclick=()=>showTab('patients');$$('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $('#saveSettings').onclick=saveSettings;$('#testWorker').onclick=testWorker;
+if($('#learnCorrection'))$('#learnCorrection').onclick=confirmLearnedCorrection;
+if($('#clearLearned'))$('#clearLearned').onclick=clearAdaptiveRules;
 
 // Elimina borradores de versiones antiguas: se conserva solo la mini historia explícita.
 ['psikia_v25_draft','psikia_v24_draft','psikia_draft'].forEach(k=>localStorage.removeItem(k));
-initMeds();loadSettings();renderPatients();clearCurrentNote(false,false);
+initMeds();loadSettings();renderPatients();renderAdaptiveRules();clearCurrentNote(false,false);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',async()=>{

@@ -1,3 +1,11 @@
+# Psikia Hub v4.8.1 · compatibilidad con Worker 3.7
+
+Microactualización sobre v4.8. No cambia el dictado, MediaRecorder, silencios, vocabulario adaptativo ni el aprendizaje local.
+
+- Mapea `valoracion_riesgos` del Worker 3.7 a la caja visible **Valoración de riesgos** en Ingreso UR.
+- Añade el mismo mapeo en Primera CSM y Evolutivo.
+- Sube la caché del service worker para forzar la actualización de la PWA.
+
 # Psikia Hub v4.8 · adaptive_dictionary_v1
 
 - Conserva íntegra la v4.7: MediaRecorder + Whisper Large v3 Turbo, PUSH por pulsación, ausencia de reinicios por silencios y Workers AI actual.

@@ -27,6 +27,7 @@ const WORKER_SECTION_MAP = {
     tratamiento_actual: 'Tratamiento actual',
     enfermedad_actual_longitudinal: 'Enfermedad actual / evolución longitudinal',
     exploracion_psicopatologica: 'Exploración psicopatológica',
+    valoracion_riesgos: 'Valoración de riesgos',
     diagnostico_hipotesis: 'Juicio clínico / hipótesis diagnóstica',
     plan: 'Plan'
   },
@@ -40,6 +41,7 @@ const WORKER_SECTION_MAP = {
     tratamiento_actual: 'Tratamiento actual',
     enfermedad_actual: 'Enfermedad actual',
     exploracion_psicopatologica: 'Exploración psicopatológica',
+    valoracion_riesgos: 'Valoración de riesgos',
     orientacion_diagnostica: 'Orientación diagnóstica',
     plan: 'Plan'
   },
@@ -48,6 +50,7 @@ const WORKER_SECTION_MAP = {
     evolucion_clinica: 'Evolución desde la última revisión',
     funcionamiento_situacion_psicosocial: 'Funcionamiento / rehabilitación',
     exploracion_psicopatologica: 'Exploración psicopatológica comparativa',
+    valoracion_riesgos: 'Valoración de riesgos',
     orientacion_diagnostica: 'Juicio clínico'
   },
   pti: {

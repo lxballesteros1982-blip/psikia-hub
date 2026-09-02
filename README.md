@@ -1,3 +1,21 @@
+# Psikia Hub v4.8.3 · seis campos clínicos
+
+Versión construida directamente sobre la base estable v4.8.1.
+
+- La nota visible queda reducida exactamente a: **MC**, **Descripción del caso**,
+  **Enfermedad actual**, **Exploración**, **Juicio clínico** y
+  **Plan de intervención**.
+- Riesgo autolítico/heteroagresivo y exploración neurológica pertinente se integran
+  en **Exploración**.
+- Antecedentes, seguimiento, tratamiento basal, sustancias y situación
+  social-familiar-funcional se integran en **Descripción del caso**.
+- Intervenciones, cambios terapéuticos, acuerdos, pruebas solicitadas en la atención,
+  seguimiento y disposición/epicrisis se integran en **Plan de intervención**.
+- La PWA entiende tanto el Worker nuevo v3.8.1.2 como, durante la actualización,
+  la salida anterior v3.8.1.1.
+- No cambia MediaRecorder, Whisper, el dictado continuo por pulsación, el manejo de
+  silencios, el vocabulario adaptativo ni la solución del bleep.
+
 # Psikia Hub v4.8.1 · compatibilidad con Worker 3.7
 
 Microactualización sobre v4.8. No cambia el dictado, MediaRecorder, silencios, vocabulario adaptativo ni el aprendizaje local.

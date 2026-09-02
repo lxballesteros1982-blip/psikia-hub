@@ -18,66 +18,23 @@ const WORKER_REPORT_TYPE = {
   emergency: 'urgencias'
 };
 
-const WORKER_SECTION_MAP = {
-  ur_initial: {
-    motivo_derivacion: 'Motivo de derivación / ingreso',
-    antecedentes_familiares: 'Antecedentes familiares',
-    situacion_social_laboral_funcional: 'Situación social, laboral y funcional',
-    antecedentes_medicos: 'Antecedentes médicos no psiquiátricos',
-    tratamiento_actual: 'Tratamiento actual',
-    enfermedad_actual_longitudinal: 'Enfermedad actual / evolución longitudinal',
-    exploracion_psicopatologica: 'Exploración psicopatológica',
-    valoracion_riesgos: 'Valoración de riesgos',
-    diagnostico_hipotesis: 'Juicio clínico / hipótesis diagnóstica',
-    plan: 'Plan'
-  },
-  csm_initial: {
-    motivo_consulta_procedencia: 'Motivo de consulta / procedencia',
-    antecedentes_medicos: 'Antecedentes médicos no psiquiátricos',
-    antecedentes_psiquiatricos: 'Antecedentes psiquiátricos',
-    antecedentes_familiares: 'Antecedentes familiares',
-    consumo_sustancias: 'Consumo de sustancias',
-    situacion_social_laboral: 'Situación social y laboral',
-    tratamiento_actual: 'Tratamiento actual',
-    enfermedad_actual: 'Enfermedad actual',
-    exploracion_psicopatologica: 'Exploración psicopatológica',
-    valoracion_riesgos: 'Valoración de riesgos',
-    orientacion_diagnostica: 'Orientación diagnóstica',
-    plan: 'Plan'
-  },
-  evolution: {
-    resumen_contexto: 'Resumen clínico longitudinal',
-    evolucion_clinica: 'Evolución desde la última revisión',
-    funcionamiento_situacion_psicosocial: 'Funcionamiento / rehabilitación',
-    exploracion_psicopatologica: 'Exploración psicopatológica comparativa',
-    valoracion_riesgos: 'Valoración de riesgos',
-    orientacion_diagnostica: 'Juicio clínico'
-  },
-  pti: {
-    resumen_caso: 'Resumen clínico y funcional',
-    necesidades_problemas: 'Necesidades / problemas activos',
-    objetivos_smart: 'Objetivos SMART',
-    intervencion_psiquiatria: 'Intervención de Psiquiatría',
-    intervencion_psicologia: 'Intervención de Psicología',
-    intervencion_enfermeria: 'Intervención de Enfermería',
-    intervencion_terapia_ocupacional: 'Intervención de Terapia Ocupacional',
-    intervencion_trabajo_social: 'Intervención de Trabajo Social',
-    otras_intervenciones: 'Otras intervenciones / coordinación'
-  },
-  emergency: {
-    motivo_consulta: 'Motivo de consulta',
-    antecedentes_relevantes: 'Antecedentes relevantes',
-    situacion_precipitante_enfermedad_actual: 'Situación precipitante / enfermedad actual',
-    informacion_colateral: 'Información colateral relevante',
-    exploracion_psicopatologica: 'Exploración psicopatológica',
-    valoracion_riesgos: 'Valoración de riesgos',
-    valoracion_medico_organica_pruebas: 'Valoración médico-orgánica y pruebas complementarias',
-    juicio_clinico: 'Juicio clínico',
-    intervencion_realizada: 'Intervención realizada',
-    respuesta_evolucion_urgencias: 'Respuesta / evolución durante Urgencias',
-    epicrisis_disposicion: 'Epicrisis y disposición'
-  }
-};
+const SIX_SECTIONS = Object.freeze([
+  'MC',
+  'Descripción del caso',
+  'Enfermedad actual',
+  'Exploración',
+  'Juicio clínico',
+  'Plan de intervención'
+]);
+
+const SIX_KEY_TO_LABEL = Object.freeze({
+  motivo_consulta: 'MC',
+  descripcion_caso: 'Descripción del caso',
+  enfermedad_actual: 'Enfermedad actual',
+  exploracion: 'Exploración',
+  juicio_clinico: 'Juicio clínico',
+  plan_intervencion: 'Plan de intervención'
+});
 
 function workerSupportsType(type){
   return Boolean(WORKER_REPORT_TYPE[type]);
@@ -87,42 +44,96 @@ function mergeField(target, value, prefix=''){
   const v=String(value || '').trim();
   if(!v) return target || '';
   const piece=prefix ? `${prefix}${v}` : v;
+  const existing=String(target||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const np=norm(piece);
+  if(existing.some(x=>{const nx=norm(x);return nx===np || nx.includes(np) || np.includes(nx);})) return target || '';
   return [target, piece].filter(Boolean).join('\n').trim();
 }
 
 function mapWorkerSections(type, source){
   const out=Object.fromEntries(templates[type].sections.map(s=>[s,'']));
   const src=source && typeof source==='object' ? source : {};
-  const map=WORKER_SECTION_MAP[type] || {};
 
-  for(const [key, label] of Object.entries(map)){
-    if(label in out) out[label]=mergeField(out[label], src[key]);
+  const add=(label,key,prefix='')=>{
+    if(label in out) out[label]=mergeField(out[label],src[key],src[key]?prefix:'');
+  };
+
+  // Esquema nuevo de seis campos.
+  for(const [key,label] of Object.entries(SIX_KEY_TO_LABEL)) add(label,key);
+
+  // Compatibilidad de transición: la PWA nueva también entiende el Worker
+  // estable v3.8.1.1 mientras el usuario actualiza Cloudflare.
+  if(type==='ur_initial'){
+    add('MC','motivo_derivacion');
+    add('Descripción del caso','antecedentes_psiquiatricos','Antecedentes psiquiátricos: ');
+    add('Descripción del caso','consumo_sustancias','Sustancias: ');
+    add('Descripción del caso','antecedentes_familiares','Antecedentes familiares: ');
+    add('Descripción del caso','situacion_social_laboral_funcional','Situación basal: ');
+    add('Descripción del caso','antecedentes_medicos','Antecedentes médicos: ');
+    add('Descripción del caso','tratamiento_actual','Tratamiento actual: ');
+    add('Enfermedad actual','enfermedad_actual_longitudinal');
+    add('Exploración','exploracion_psicopatologica');
+    add('Exploración','valoracion_riesgos','Riesgo: ');
+    add('Juicio clínico','diagnostico_hipotesis');
+    add('Plan de intervención','plan');
   }
 
-  // Campos que el Worker separa más que la interfaz actual.
-  if(type==='ur_initial'){
-    out['Antecedentes psiquiátricos y consumo']=mergeField(out['Antecedentes psiquiátricos y consumo'], src.antecedentes_psiquiatricos);
-    out['Antecedentes psiquiátricos y consumo']=mergeField(out['Antecedentes psiquiátricos y consumo'], src.consumo_sustancias, src.consumo_sustancias ? 'Consumo de sustancias: ' : '');
+  if(type==='csm_initial'){
+    add('MC','motivo_consulta_procedencia');
+    add('Descripción del caso','antecedentes_medicos','Antecedentes médicos: ');
+    add('Descripción del caso','antecedentes_psiquiatricos','Antecedentes psiquiátricos: ');
+    add('Descripción del caso','antecedentes_familiares','Antecedentes familiares: ');
+    add('Descripción del caso','consumo_sustancias','Sustancias: ');
+    add('Descripción del caso','situacion_social_laboral','Situación basal: ');
+    add('Descripción del caso','tratamiento_actual','Tratamiento actual: ');
+    add('Enfermedad actual','enfermedad_actual');
+    add('Exploración','exploracion_psicopatologica');
+    add('Exploración','valoracion_riesgos','Riesgo: ');
+    add('Juicio clínico','orientacion_diagnostica');
+    add('Plan de intervención','plan');
   }
 
   if(type==='evolution'){
-    let treatment='';
-    treatment=mergeField(treatment, src.adherencia_tolerabilidad);
-    treatment=mergeField(treatment, src.tratamiento_actual, src.tratamiento_actual ? 'Tratamiento actual: ' : '');
-    out['Adherencia, tolerancia y tratamiento actual']=treatment;
-
-    let plan='';
-    plan=mergeField(plan, src.cambios_tratamiento, src.cambios_tratamiento ? 'Cambios de tratamiento: ' : '');
-    plan=mergeField(plan, src.plan);
-    out['Plan de tratamiento']=plan;
+    add('Descripción del caso','resumen_contexto');
+    add('Descripción del caso','tratamiento_actual','Tratamiento actual: ');
+    add('Enfermedad actual','evolucion_clinica');
+    add('Enfermedad actual','funcionamiento_situacion_psicosocial','Funcionamiento: ');
+    add('Enfermedad actual','adherencia_tolerabilidad','Adherencia/tolerancia: ');
+    add('Enfermedad actual','pruebas_incidencias','Pruebas/incidencias: ');
+    add('Exploración','exploracion_psicopatologica');
+    add('Exploración','valoracion_riesgos','Riesgo: ');
+    add('Juicio clínico','orientacion_diagnostica');
+    add('Plan de intervención','cambios_tratamiento','Cambios de tratamiento: ');
+    add('Plan de intervención','plan');
   }
 
   if(type==='pti'){
-    let indicators='';
-    indicators=mergeField(indicators, src.indicadores_resultado);
-    indicators=mergeField(indicators, src.frecuencia_seguimiento, src.frecuencia_seguimiento ? 'Frecuencia/seguimiento: ' : '');
-    indicators=mergeField(indicators, src.fecha_revision, src.fecha_revision ? 'Revisión: ' : '');
-    out['Indicadores y revisión']=indicators;
+    add('Descripción del caso','resumen_caso');
+    add('Enfermedad actual','necesidades_problemas');
+    add('Plan de intervención','objetivos_smart','Objetivos SMART: ');
+    add('Plan de intervención','intervencion_psiquiatria','Psiquiatría: ');
+    add('Plan de intervención','intervencion_psicologia','Psicología: ');
+    add('Plan de intervención','intervencion_enfermeria','Enfermería: ');
+    add('Plan de intervención','intervencion_terapia_ocupacional','Terapia Ocupacional: ');
+    add('Plan de intervención','intervencion_trabajo_social','Trabajo Social: ');
+    add('Plan de intervención','otras_intervenciones','Otras intervenciones: ');
+    add('Plan de intervención','frecuencia_seguimiento','Frecuencia/seguimiento: ');
+    add('Plan de intervención','indicadores_resultado','Indicadores: ');
+    add('Plan de intervención','fecha_revision','Revisión: ');
+  }
+
+  if(type==='emergency'){
+    add('MC','motivo_consulta');
+    add('Descripción del caso','antecedentes_relevantes');
+    add('Enfermedad actual','situacion_precipitante_enfermedad_actual');
+    add('Enfermedad actual','informacion_colateral','Información colateral: ');
+    add('Enfermedad actual','valoracion_medico_organica_pruebas','Valoración/pruebas: ');
+    add('Exploración','exploracion_psicopatologica');
+    add('Exploración','valoracion_riesgos','Riesgo: ');
+    add('Juicio clínico','juicio_clinico');
+    add('Plan de intervención','intervencion_realizada','Intervención: ');
+    add('Plan de intervención','respuesta_evolucion_urgencias','Respuesta/evolución: ');
+    add('Plan de intervención','epicrisis_disposicion','Disposición/seguimiento: ');
   }
 
   return out;
@@ -131,122 +142,51 @@ function mapWorkerSections(type, source){
 function populateMedicationChanges(changes){
   const items=Array.isArray(changes) ? changes.slice(0,4) : [];
   if(!items.length) return;
-  for(let i=1;i<=items.length;i++){
-    const item=items[i-1] || {};
-    const name=$('#medName'+i);
-    const plan=$('#medPlan'+i);
-    if(!name || !plan) continue;
-    name.value=String(item.drug || '').trim();
+  for(const item of items){
+    const literal=String(item?.duration_or_change||'').trim();
     const parts=[];
-    if(item.dose) parts.push(String(item.dose).trim());
-    if(item.schedule) parts.push(String(item.schedule).trim());
-    if(item.route) parts.push('Vía '+String(item.route).trim());
-    if(item.duration_or_change) parts.push(String(item.duration_or_change).trim());
-    plan.value=parts.join(' · ');
+    if(item?.drug) parts.push(String(item.drug).trim());
+    if(item?.dose) parts.push(String(item.dose).trim());
+    if(item?.schedule) parts.push(String(item.schedule).trim());
+    if(item?.route) parts.push('Vía '+String(item.route).trim());
+    const line=literal || parts.join(' · ');
+    if(line) reportData['Plan de intervención']=mergeField(reportData['Plan de intervención'],line);
   }
 }
 
 const templates = {
   ur_initial: {
     label: 'Ingreso / valoración inicial UR',
-    sections: [
-      'Motivo de derivación / ingreso',
-      'Antecedentes psiquiátricos y consumo',
-      'Antecedentes familiares',
-      'Situación social, laboral y funcional',
-      'Antecedentes médicos no psiquiátricos',
-      'Tratamiento actual',
-      'Enfermedad actual / evolución longitudinal',
-      'Exploración psicopatológica',
-      'Valoración de riesgos',
-      'Juicio clínico / hipótesis diagnóstica',
-      'Plan'
-    ]
+    sections: [...SIX_SECTIONS]
   },
   csm_initial: {
     label: 'Primera consulta CSM',
-    sections: [
-      'Motivo de consulta / procedencia',
-      'Antecedentes médicos no psiquiátricos',
-      'Antecedentes psiquiátricos',
-      'Antecedentes familiares',
-      'Consumo de sustancias',
-      'Situación social y laboral',
-      'Tratamiento actual',
-      'Enfermedad actual',
-      'Exploración psicopatológica',
-      'Valoración de riesgos',
-      'Orientación diagnóstica',
-      'Plan'
-    ]
+    sections: [...SIX_SECTIONS]
   },
   evolution: {
     label: 'Evolutivo / seguimiento',
-    sections: [
-      'Resumen clínico longitudinal',
-      'Evolución desde la última revisión',
-      'Funcionamiento / rehabilitación',
-      'Adherencia, tolerancia y tratamiento actual',
-      'Exploración psicopatológica comparativa',
-      'Valoración de riesgos',
-      'Pruebas / incidencias clínicas',
-      'Juicio clínico',
-      'Plan de tratamiento',
-      'Próxima revisión / coordinación'
-    ]
+    sections: [...SIX_SECTIONS]
   },
   pti: {
     label: 'PTI',
-    sections: [
-      'Resumen clínico y funcional',
-      'Necesidades / problemas activos',
-      'Riesgos y factores protectores',
-      'Objetivos SMART',
-      'Intervención de Psiquiatría',
-      'Intervención de Psicología',
-      'Intervención de Enfermería',
-      'Intervención de Terapia Ocupacional',
-      'Intervención de Trabajo Social',
-      'Otras intervenciones / coordinación',
-      'Indicadores y revisión'
-    ]
+    sections: [...SIX_SECTIONS]
   },
   emergency: {
     label: 'Intervención en Urgencias',
-    sections: [
-      'Motivo de consulta',
-      'Antecedentes relevantes',
-      'Situación precipitante / enfermedad actual',
-      'Información colateral relevante',
-      'Exploración psicopatológica',
-      'Valoración de riesgos',
-      'Valoración médico-orgánica y pruebas complementarias',
-      'Juicio clínico',
-      'Intervención realizada',
-      'Respuesta / evolución durante Urgencias',
-      'Epicrisis y disposición'
-    ]
+    sections: [...SIX_SECTIONS]
   },
   discharge: {
     label: 'Informe de alta',
-    sections: [
-      'Motivo y contexto del ingreso',
-      'Antecedentes relevantes',
-      'Evolución durante el ingreso',
-      'Intervenciones realizadas',
-      'Exploración psicopatológica al alta',
-      'Valoración de riesgos al alta',
-      'Pruebas complementarias relevantes',
-      'Diagnóstico al alta',
-      'Tratamiento al alta',
-      'Situación funcional al alta',
-      'Epicrisis',
-      'Plan de seguimiento'
-    ]
+    sections: [...SIX_SECTIONS]
   }
 };
 
 const cueMap = {
+  'MC':['motivo de consulta','motivo de derivacion','acude por','consulta por','traido','traida','derivad','remitid','ingresa por','desde hace'],
+  'Descripción del caso':['antecedentes','diagnostico de base','en seguimiento','centro de salud mental','ingresos previos','tratamiento actual','medicacion habitual','vive con','convive','pareja','hijos','trabaja','desemplead','pension','incapacidad','consumo','toxicos','alcohol','cannabis','familiares psiqui','situacion basal'],
+  'Enfermedad actual':['enfermedad actual','desde hace','actualmente','inicio','empeora','mejora','ultimos dias','ultimas semanas','ultimos meses','desencaden','precipitante','estresor','ruptura','perdida de empleo','cambio reciente','analitica','resultado'],
+  'Exploración':['exploracion','consciente','orientad','colaborador','contacto','discurso','lenguaje','afecto','ansiedad','delir','alucin','ideacion','psicomot','insight','sueño','apetito','suicid','autolit','autoles','heteroagres','riesgo','neurolog'],
+  'Plan de intervención':['plan','intervencion','indicamos','pautamos','iniciar','aumentar','subir','disminuir','retirar','mantener','derivar','cita','seguimiento','alta','ingreso','observacion','acuerdo','familia','psicoeduc','modelo cognitivo','pruebas solicitadas'],
   'Motivo de derivación / ingreso':['motivo','derivad','ingreso por','procedencia'],
   'Motivo de consulta / procedencia':['motivo','consulta por','acude por','procedencia','derivad'],
   'Motivo de consulta':['motivo','consulta por','acude por','traido','traida','ambulancia','policia'],
@@ -577,15 +517,15 @@ function localScore(section,chunk){
   const n=norm(chunk), cues=cueMap[section]||[]; let score=0;
   for(const c of cues) if(n.includes(norm(c))) score += c.length>10?3:2;
   const sn=norm(section);
-  if(/suicid|autoles|heteroagres|riesgo/.test(n) && /riesgo/.test(sn)) score+=12;
-  if(/alucin|delir|afecto|discurso|orientad|psicomot|insight/.test(n) && /exploracion psicopatologica/.test(sn)) score+=9;
-  if(/analit|ecg|tac|toxic|glucemia|constantes/.test(n) && /(pruebas|medico-organica)/.test(sn)) score+=10;
-  if(/se administra|se realiza|desescalada|contencion|medidas de seguridad/.test(n) && /intervencion realizada/.test(sn)) score+=12;
-  if(/alta a domicilio|se decide ingreso|ingreso en|epicrisis|disposicion/.test(n) && /(epicrisis|disposicion)/.test(sn)) score+=12;
-  if(/tratamiento actual|toma|mg|pauta habitual/.test(n) && /(tratamiento actual|adherencia)/.test(sn)) score+=8;
-  if(/iniciar|aumentar|subir|disminuir|retirar|mantener|pautar|derivar/.test(n) && /(plan|tratamiento al alta|intervencion de psiquiatria)/.test(sn)) score+=8;
-  if(/desde hace|actualmente|empeor|agudizacion|precipitante|desencaden/.test(n) && /(enfermedad actual|situacion precipitante|evolucion desde)/.test(sn)) score+=7;
-  if(/acude por|consulta por|derivad|ingresa por|traid[oa] por/.test(n) && /motivo/.test(sn)) score+=8;
+  if(/suicid|autoles|heteroagres|riesgo/.test(n) && /exploracion/.test(sn)) score+=12;
+  if(/alucin|delir|afecto|discurso|orientad|psicomot|insight/.test(n) && /exploracion/.test(sn)) score+=9;
+  if(/analit|ecg|tac|toxic|glucemia|constantes/.test(n) && /(enfermedad actual|plan de intervencion)/.test(sn)) score+=5;
+  if(/se administra|se realiza|desescalada|contencion|medidas de seguridad/.test(n) && /plan de intervencion/.test(sn)) score+=12;
+  if(/alta a domicilio|se decide ingreso|ingreso en|epicrisis|disposicion/.test(n) && /plan de intervencion/.test(sn)) score+=12;
+  if(/tratamiento actual|toma|mg|pauta habitual/.test(n) && /descripcion del caso/.test(sn)) score+=8;
+  if(/iniciar|aumentar|subir|disminuir|retirar|mantener|pautar|derivar/.test(n) && /plan de intervencion/.test(sn)) score+=8;
+  if(/desde hace|actualmente|empeor|agudizacion|precipitante|desencaden/.test(n) && /enfermedad actual/.test(sn)) score+=7;
+  if(/acude por|consulta por|derivad|ingresa por|traid[oa] por/.test(n) && /^mc$/.test(sn)) score+=8;
   return score;
 }
 function routeLocal(chunk,type,previous){
@@ -754,15 +694,14 @@ function updatePatientContext(){
 }
 function showTab(name){$$('.tab').forEach(x=>x.classList.remove('active'));$('#tab-'+name).classList.add('active');$$('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));if(name==='patients')renderPatients();}
 function initMeds(){
-  const host=$('#medGrid'); for(let i=1;i<=4;i++){
+  const host=$('#medGrid'); if(!host)return; for(let i=1;i<=4;i++){
     const d=document.createElement('div');d.className='medSlot';d.innerHTML=`<b>Cambio ${i}</b><label>Fármaco</label><input id="medName${i}" placeholder="Fármaco"><label>Pauta concreta</label><textarea id="medPlan${i}" class="mini" placeholder="Dosis, pauta, vía si procede, duración/cambio programado"></textarea>`;host.appendChild(d);
   }
 }
 function applyMeds(){
   const lines=[];for(let i=1;i<=4;i++){const n=$('#medName'+i).value.trim(),p=$('#medPlan'+i).value.trim();if(n||p)lines.push((n?n+': ':'')+p);}if(!lines.length)return;
   if(!Object.keys(reportData).length){const local=segmentLocal($('#raw').value,$('#visitType').value);reportData=local.sections;unclassified=local.unclassified;}
-  const type=$('#visitType').value;
-  const target=type==='emergency'?'Intervención realizada':type==='discharge'?'Tratamiento al alta':type==='evolution'?'Plan de tratamiento':type==='pti'?'Intervención de Psiquiatría':'Plan';
+  const target='Plan de intervención';
   reportData[target]=[reportData[target],...lines].filter(Boolean).join('\n');renderReport('local');
 }
 function copyText(t){
@@ -792,7 +731,7 @@ function emailReport(){
 $('#dictate').addEventListener('click',toggleDictation);$('#dictate').addEventListener('contextmenu',e=>e.preventDefault());
 $('#generate').onclick=generate;$('#clearRaw').onclick=()=>{if(confirm('¿Borrar solo el dictado?')){$('#raw').value='';lastDictationLearning=null;if($('#learningStatus'))$('#learningStatus').textContent='El aprendizaje solo se activa con una corrección confirmada por ti.';updatePrivacyWarning();}};
 $('#newNote').onclick=()=>clearCurrentNote(true,false);$('#newNoteTop').onclick=()=>clearCurrentNote(true,false);$('#discardDraft').onclick=()=>clearCurrentNote(true,false);
-$('#savePatient').onclick=savePatientEntry;$('#copyReport').onclick=()=>copyText(collectReportText());$('#emailReport').onclick=emailReport;$('#applyMeds').onclick=applyMeds;
+$('#savePatient').onclick=savePatientEntry;$('#copyReport').onclick=()=>copyText(collectReportText());$('#emailReport').onclick=emailReport;if($('#applyMeds'))$('#applyMeds').onclick=applyMeds;
 ['patientCode','diagnosis'].forEach(id=>$('#'+id).addEventListener('input',updatePatientContext));$('#raw').addEventListener('input',updatePrivacyWarning);
 $('#visitType').addEventListener('change',()=>{reportData={};unclassified=[];$('#reportCard').hidden=true;$('#reportSections').innerHTML='';});
 $('#patientFilter').addEventListener('input',renderPatients);$('#openPatients').onclick=()=>showTab('patients');$$('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));

@@ -7,7 +7,7 @@
 <meta name="description" content="Psikia Hub: dictado clínico, estructuración de notas y mini historia local.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<title>Psikia Hub v4.8.1</title>
+<title>Psikia Hub v4.8.3 · seis campos</title>
 <style>
 :root{--bg:#f4f7f9;--card:#fff;--ink:#17242e;--muted:#6b7a86;--primary:#173d5b;--primary2:#286785;--soft:#eaf3f8;--line:#d6e1e7;--ok:#187153;--warn:#8f6413;--danger:#a13b3b;--ai:#5b3f8c}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{min-height:100vh}
@@ -25,7 +25,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
 </style>
 </head>
 <body>
-<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.8.1</span></div><div class="sub">dictado continuo por pulsación · vocabulario adaptativo · nota limpia · Workers AI conectado</div></div></div></header>
+<header><div class="head"><div class="logo">Ψ</div><div><div class="brand">Psikia Hub <span style="font-size:12px;opacity:.78">v4.8.3</span></div><div class="sub">dictado continuo por pulsación · seis campos clínicos · vocabulario adaptativo · Workers AI conectado</div></div></div></header>
 <main>
 <section id="tab-note" class="tab active">
   <div class="card">
@@ -63,12 +63,6 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top
     <div class="row" style="margin-top:8px"><button id="copyReport">Copiar informe</button><button id="savePatient" class="secondary">Guardar evolución</button><button id="emailReport" class="ghost">Enviar correo</button></div>
   </div>
 
-  <div class="card">
-    <div class="eyebrow">Cambios terapéuticos</div><h2>Hasta cuatro pautas</h2>
-    <div class="notice warn">Solo se añaden cambios confirmados por el médico. El resto del tratamiento queda implícitamente sin cambios.</div>
-    <div class="medGrid" id="medGrid"></div>
-    <button id="applyMeds" style="margin-top:8px">Añadir pautas al informe</button>
-  </div>
 </section>
 
 <section id="tab-patients" class="tab">
